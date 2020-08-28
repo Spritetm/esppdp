@@ -842,7 +842,7 @@ return;
 
 void WriteFP (fpac_t *fptr, int32 VA, int32 spec, int32 len)
 {
-int32 exta, pa, pa2, pa3, pa4;
+int32 exta, pa, pa2, pa3=0, pa4=0;
 
 if (spec <= 07) {
     F_STORE_P (len == QUAD, fptr, FR[spec]);
