@@ -72,6 +72,9 @@
 extern "C" {
 #endif
 
+#define DONT_USE_READER_THREAD
+
+
 /* make common BSD code a bit easier to read in this file */
 /* OS/X seems to define and compile using one of these BSD types */
 #if defined(__NetBSD__) || defined (__OpenBSD__) || defined (__FreeBSD__)

@@ -50,6 +50,9 @@
 extern "C" {
 #endif
 
+#include <unistd.h>
+#include <stdlib.h>
+
 #if !defined(CBUFSIZE)
 #define CBUFSIZE 1024
 #define sim_printf printf
@@ -78,6 +81,11 @@ SOCKET sim_err_sock (SOCKET sock, const char *emsg);
 int sim_getnames_sock (SOCKET sock, char **socknamebuf, char **peernamebuf);
 void sim_init_sock (void);
 void sim_cleanup_sock (void);
+
+
+#define SOCKET_ERROR -1
+#define INVALID_SOCKET -1
+
 
 #ifdef  __cplusplus
 }

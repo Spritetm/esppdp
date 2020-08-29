@@ -224,6 +224,7 @@
 #include "sim_tape.h"
 #include "sim_ether.h"
 #include "sim_card.h"
+#include "sim_tmxr.h"
 #include "sim_serial.h"
 #include "sim_video.h"
 #include "sim_sock.h"
@@ -2647,7 +2648,7 @@ t_stat process_stdin_commands (t_stat stat, char *argv[], t_bool do_called);
 
 /* Main command loop */
 
-int main (int argc, char *argv[])
+int app_main (int argc, char *argv[])
 {
 char cbuf[4*CBUFSIZE], *cptr, *cptr2;
 char nbuf[PATH_MAX + 7];
@@ -2866,7 +2867,7 @@ return sim_exit_status;
 t_stat process_stdin_commands (t_stat stat, char *argv[], t_bool do_called)
 {
 char cbuf[4*CBUFSIZE], gbuf[CBUFSIZE];
-CONST char *cptr;
+CONST char *cptr=NULL;
 t_stat stat_nomessage;
 CTAB *cmdp = NULL;
 
@@ -4638,12 +4639,12 @@ t_stat assert_cmd (int32 flag, CONST char *cptr)
 char gbuf[CBUFSIZE], gbuf2[CBUFSIZE];
 CONST char *tptr, *gptr;
 REG *rptr;
-uint32 idx;
+uint32 idx=0;
 t_stat r;
 t_bool Not = FALSE;
 t_bool Exist = FALSE;
 t_bool result;
-t_addr addr;
+t_addr addr=0;
 t_stat reason;
 
 cptr = (CONST char *)get_sim_opt (CMD_OPT_SW|CMD_OPT_DFT, (CONST char *)cptr, &r);  
@@ -10791,7 +10792,7 @@ SCHTAB *get_asearch (CONST char *cptr, int32 radix, SCHTAB *schptr)
 {
 int32 c, logop, cmpop;
 t_value *logval, *cmpval;
-t_stat reason;
+t_stat reason=0;
 CONST char *ocptr = cptr;
 const char *sptr;
 char gbuf[CBUFSIZE];
@@ -12650,7 +12651,7 @@ return SCPE_OK;
 t_stat sim_exp_check (EXPECT *exp, uint8 data)
 {
 int32 i;
-EXPTAB *ep;
+EXPTAB *ep=NULL;
 int regex_checks = 0;
 char *tstr = NULL;
 
@@ -15560,7 +15561,7 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {
             case DEV_TAPE:
                 tstat = sim_tape_test (dptr);
                 break;
-            case DEV_MUX:
+          case DEV_MUX:
                 tstat = tmxr_sock_test (dptr);
                 break;
             default:

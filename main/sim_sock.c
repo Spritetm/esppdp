@@ -104,17 +104,12 @@ SOCKET sim_connect_sock_ex (const char *sourcehostport, const char *hostport, co
 return INVALID_SOCKET;
 }
 
-SOCKET sim_accept_conn (SOCKET master, char **connectaddr);
-{
-return INVALID_SOCKET;
-}
-
 int sim_read_sock (SOCKET sock, char *buf, int nbytes)
 {
 return -1;
 }
 
-int sim_write_sock (SOCKET sock, char *msg, int nbytes)
+int sim_write_sock (SOCKET sock, const char *msg, int nbytes)
 {
 return 0;
 }

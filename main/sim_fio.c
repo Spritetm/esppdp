@@ -748,7 +748,7 @@ char *c, *name, *ext;
 char chr;
 const char *p;
 char filesizebuf[32] = "";
-char filedatetimebuf[32] = "";
+char filedatetimebuf[64] = "";
 
 if (((*filepath == '\'') || (*filepath == '"')) &&
     (filepath[strlen (filepath) - 1] == *filepath)) {

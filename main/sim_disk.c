@@ -5284,7 +5284,8 @@ for (c = strchr (szFullFileSpecBuffer, '\\'); c; c = strchr (szFullFileSpecBuffe
     *c = '/';
 #else
 char buffer[PATH_MAX];
-char *wd = getcwd(buffer, PATH_MAX);
+//char *wd = getcwd(buffer, PATH_MAX);
+const char *wd="/";
 
 if ((szFileSpec[0] != '/') || (strchr (szFileSpec, ':')))
     snprintf (szFullFileSpecBuffer, BufferSize, "%s/%s", wd, szFileSpec);

@@ -1199,7 +1199,7 @@ t_tpclnt tpcbc;
 t_awshdr awshdr;
 size_t   rdcnt;
 t_mtrlnt buffer [256];                                  /* local tape buffer */
-t_addr saved_pos;
+t_addr saved_pos=0;
 uint32   bufcntr, bufcap;                               /* buffer counter and capacity */
 int32    runaway_counter, sizeof_gap;                   /* bytes remaining before runaway and bytes per gap */
 t_stat   status = MTSE_OK;
@@ -3323,7 +3323,7 @@ return SCPE_OK;
 
 static uint32 sim_tape_tpc_map (UNIT *uptr, t_addr *map, uint32 mapsize)
 {
-t_addr tpos, leot;
+t_addr tpos, leot=0;
 t_addr tape_size;
 t_tpclnt bc, last_bc = TPC_EOM;
 uint32 had_double_tape_mark = 0;
@@ -4257,7 +4257,7 @@ static void ansi_make_HDR1 (HDR1 *hdr1, VOL1 *vol, HDR4 *hdr4, const char *filen
     {
     const char *fn;
     struct stat statb;
-    char extra_name_used[3] = "00";
+    char extra_name_used[32] = "00";
     char *fn_cpy, *c, *ext;
 
     memset (&statb, 0, sizeof (statb));

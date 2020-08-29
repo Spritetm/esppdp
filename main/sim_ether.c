@@ -368,7 +368,8 @@
 
   ------------------------------------------------------------------------------
 */
-
+#include <arpa/inet.h>
+#undef BIT
 #include <ctype.h>
 #include "sim_ether.h"
 #include "sim_sock.h"

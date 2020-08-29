@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+#include "sim_tmxr.h"
+
 #ifndef SIMH_SERHANDLE_DEFINED
 #define SIMH_SERHANDLE_DEFINED 0
 typedef struct SERPORT *SERHANDLE;

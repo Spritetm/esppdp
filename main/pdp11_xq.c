@@ -1313,7 +1313,7 @@ t_stat xq_process_mop(CTLR* xq)
     return SCPE_NOFNC;
 
   while ((meb->type != 0) && (meb < limit)) {
-    address = (meb->add_hi << 16) || (meb->add_mi << 8) || meb->add_lo;
+    address = (meb->add_hi << 16) | (meb->add_mi << 8) | meb->add_lo;
 
     /* MOP stuff here - NOT YET FULLY IMPLEMENTED */
     sim_debug (DBG_WRN, xq->dev, "Processing MEB type: %d\n", meb->type);

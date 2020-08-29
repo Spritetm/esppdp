@@ -1664,7 +1664,7 @@ for (i=(was_active_command ? sim_rem_cmd_active_line : 0);
             int32 save_quiet = sim_quiet;
 
             sim_quiet = 1;
-            sprintf (sim_rem_con_temp_name, "sim_remote_console_%d.temporary_log", (int)getpid());
+//            sprintf (sim_rem_con_temp_name, "sim_remote_console_%d.temporary_log", (int)getpid());
             sim_set_logon (0, sim_rem_con_temp_name);
             sim_quiet = save_quiet;
             sim_log_temp = TRUE;
@@ -2045,7 +2045,7 @@ else
     return sim_messagef (SCPE_INVREM, "Can't enable Remote Console Master mode with Remote Console disabled\n");
 
 if (sim_rem_master_mode) {
-    t_stat stat_nomessage;
+    t_stat stat_nomessage=0;
 
     sim_messagef (SCPE_OK, "Command input starting on Master Remote Console Session\n");
     stat = sim_run_boot_prep (0);
@@ -2287,7 +2287,7 @@ t_stat sim_set_debon (int32 flag, CONST char *cptr)
 char gbuf[CBUFSIZE];
 t_stat r;
 time_t now;
-size_t buffer_size;
+size_t buffer_size=0;
 
 if ((cptr == NULL) || (*cptr == 0))                     /* need arg */
     return SCPE_2FARG;
@@ -3975,8 +3975,8 @@ static t_stat sim_os_ttinit (void)
 {
 sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_ttinit() - BSDTTY\n");
 
-cmdfl = fcntl (fileno (stdin), F_GETFL, 0);             /* get old flags  and status */
-runfl = cmdfl | O_NONBLOCK;
+//cmdfl = fcntl (fileno (stdin), F_GETFL, 0);             /* get old flags  and status */
+//runfl = cmdfl | O_NONBLOCK;
 if (ioctl (0, TIOCGETP, &cmdtty) < 0)
     return SCPE_TTIERR;
 if (ioctl (0, TIOCGETC, &cmdtchars) < 0)
@@ -4122,6 +4122,7 @@ static t_stat sim_os_ttinit (void)
 {
 sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_ttinit()\n");
 
+#if 0
 cmdfl = fcntl (fileno (stdin), F_GETFL, 0);             /* get old flags  and status */
 /* 
  * make sure systems with broken termios (that don't honor
@@ -4130,7 +4131,9 @@ cmdfl = fcntl (fileno (stdin), F_GETFL, 0);             /* get old flags  and st
  * this is turned on and off depending on whether simulation 
  * is running or not.
  */
+
 runfl = cmdfl | O_NONBLOCK;
+#endif
 if (!isatty (fileno (stdin)))                           /* skip if !tty */
     return SCPE_OK;
 if (tcgetattr (0, &cmdtty) < 0)                         /* get old flags */
@@ -4181,7 +4184,7 @@ sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_ttrun()\n");
 
 if (!isatty (fileno (stdin)))                           /* skip if !tty */
     return SCPE_OK;
-(void)fcntl (fileno (stdin), F_SETFL, runfl);           /* non-block mode */
+//(void)fcntl (fileno (stdin), F_SETFL, runfl);           /* non-block mode */
 #if defined(USE_SIM_VIDEO) && defined(HAVE_LIBSDL)
 runtty.c_cc[VINTR] = 0;                                 /* OS X doesn't deliver SIGINT to main thread when enabled */
 #else
@@ -4218,7 +4221,7 @@ sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_ttcmd() - BSDTTY\n");
 if (!isatty (fileno (stdin)))                           /* skip if !tty */
     return SCPE_OK;
 sim_os_set_thread_priority (PRIORITY_NORMAL);           /* try to raise pri */
-(void)fcntl (0, F_SETFL, cmdfl);                        /* block mode */
+//(void)fcntl (0, F_SETFL, cmdfl);                        /* block mode */
 if (tcsetattr (fileno(stdin), TCSETATTR_ACTION, &cmdtty) < 0)
     return SCPE_TTIERR;
 return SCPE_OK;

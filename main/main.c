@@ -1,3 +1,4 @@
+#if 0
 /* Hello World Example
 
    This example code is in the Public Domain (or CC0 licensed, at your option.)
@@ -41,3 +42,5 @@ void app_main(void)
     fflush(stdout);
     esp_restart();
 }
+
+#endif

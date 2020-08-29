@@ -688,6 +688,7 @@ return sim_os_msec () - stime;
 
 t_stat sim_os_set_thread_priority (int below_normal_above)
 {
+#if 0
 if ((below_normal_above < -1) || (below_normal_above > 1))
     return SCPE_ARG;
 
@@ -708,6 +709,7 @@ switch (below_normal_above) {
             setpriority (PRIO_PROCESS, 0, -10);
         break;
     }
+#endif
 return SCPE_OK;
 }
 #endif  /* defined(NEED_THREAD_PRIORITY) */
@@ -1455,7 +1457,7 @@ t_stat r = SCPE_OK;
 if (cptr == NULL)
     return SCPE_ARG;
 if (1) {
-    int32 newpct;
+    int32 newpct=0;
     char gbuf[CBUFSIZE];
 
     cptr = get_glyph (cptr, gbuf, 0);                 /* get argument */
@@ -3045,7 +3047,7 @@ static t_bool _sim_coschedule_cancel (UNIT *uptr)
 AIO_UPDATE_QUEUE;
 if (uptr->next) {                           /* On a queue? */
     int tmr;
-    UNIT *nptr;
+    UNIT *nptr=NULL;
 
     for (tmr=0; tmr<=SIM_NTIMERS; tmr++) {
         RTC *rtc = &rtcs[tmr];
