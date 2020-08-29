@@ -424,7 +424,7 @@ if ((cptr == NULL) || (*cptr == 0))
     return SCPE_ARG;
 if (uptr->flags & UNIT_ATT)
     return SCPE_ALATT;
-cap = (t_offset) get_uint (cptr, 10, sim_taddr_64? 2000000: 2000, &r);
+cap = (t_offset) get_uint (cptr, 10, 2000, &r);
 if (r != SCPE_OK)
     return SCPE_ARG;
 uptr->capac = (t_addr)((cap * ((t_offset) 1000000))/((dptr->flags & DEV_SECTORS) ? 512 : 1));
@@ -1131,7 +1131,7 @@ static t_offset get_ods2_filesystem_size (UNIT *uptr)
 DEVICE *dptr;
 t_addr saved_capac;
 struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-t_offset temp_capac = (sim_toffset_64 ? (t_addr)0xFFFFFFFFu : (t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
+t_offset temp_capac = ((t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
 ODS2_HomeBlock Home;
 ODS2_FileHeader Header;
 ODS2_Retreval *Retr;
@@ -1216,7 +1216,7 @@ static t_offset get_ods1_filesystem_size (UNIT *uptr)
 DEVICE *dptr;
 t_addr saved_capac;
 struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-t_addr temp_capac = (sim_toffset_64 ? (t_addr)0xFFFFFFFFu : (t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
+t_addr temp_capac = ((t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
 ODS1_HomeBlock Home;
 ODS1_FileHeader Header;
 ODS1_Retreval *Retr;
@@ -1289,7 +1289,7 @@ static t_offset get_ultrix_filesystem_size (UNIT *uptr)
 DEVICE *dptr;
 t_addr saved_capac;
 struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-t_addr temp_capac = (sim_toffset_64 ? (t_addr)0xFFFFFFFFu : (t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
+t_addr temp_capac = ((t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
 uint8 sector_buf[512];
 ultrix_disklabel *Label = (ultrix_disklabel *)(sector_buf + sizeof (sector_buf) - sizeof (ultrix_disklabel));
 t_offset ret_val = (t_offset)-1;
@@ -1737,7 +1737,7 @@ static t_offset get_rsts_filesystem_size (UNIT *uptr)
 DEVICE *dptr;
 t_addr saved_capac;
 struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-t_addr temp_capac = (sim_toffset_64 ? (t_addr)0xFFFFFFFFu : (t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
+t_addr temp_capac = ((t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
 uint8 buf[512];
 t_offset ret_val = (t_offset)-1;
 rstsContext context;
@@ -1894,7 +1894,7 @@ static t_offset get_rt11_filesystem_size (UNIT *uptr)
 DEVICE *dptr;
 t_addr saved_capac;
 struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-t_addr temp_capac = (sim_toffset_64 ? (t_addr)0xFFFFFFFFu : (t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
+t_addr temp_capac = ((t_addr)0x7FFFFFFFu);  /* Make sure we can access the largest sector */
 uint8 sector_buf[1024];
 RT11_HomeBlock Home;
 t_seccnt sects_read;
@@ -3358,7 +3358,7 @@ return "Unknown";
 
 static t_stat sim_os_disk_implemented_raw (void)
 {
-return sim_toffset_64 ? SCPE_OK : SCPE_NOFNC;
+return SCPE_NOFNC;
 }
 
 static FILE *sim_os_disk_open_raw (const char *rawdevicename, const char *openmode)
@@ -3742,7 +3742,7 @@ return SCPE_IOERR;
 
 static t_stat sim_os_disk_implemented_raw (void)
 {
-return sim_toffset_64 ? SCPE_OK : SCPE_NOFNC;
+return SCPE_NOFNC;
 }
 
 static FILE *sim_os_disk_open_raw (const char *rawdevicename, const char *openmode)

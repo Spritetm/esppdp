@@ -1,0 +1,4 @@
+*.o
+pdp11
+media
+simh.ini

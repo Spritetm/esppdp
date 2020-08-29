@@ -2648,7 +2648,7 @@ t_stat process_stdin_commands (t_stat stat, char *argv[], t_bool do_called);
 
 /* Main command loop */
 
-int app_main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 char cbuf[4*CBUFSIZE], *cptr, *cptr2;
 char nbuf[PATH_MAX + 7];
@@ -6179,7 +6179,6 @@ if (flag) {
 #endif
     fprintf (st, "\n        Memory Access: %s Endian", sim_end ? "Little" : "Big");
     fprintf (st, "\n        Memory Pointer Size: %d bits", (int)sizeof(dptr)*8);
-    fprintf (st, "\n        %s", sim_toffset_64 ? "Large File (>2GB) support" : "No Large File support");
     fprintf (st, "\n        SDL Video support: %s", vid_version());
 #if defined (HAVE_PCRE_H)
     fprintf (st, "\n        PCRE RegEx (Version %s) support for EXPECT commands", pcre_version());
@@ -8337,6 +8336,8 @@ return r;
 
 void sim_flush_buffered_files (void)
 {
+return;
+
 uint32 i, j;
 DEVICE *dptr;
 UNIT *uptr;

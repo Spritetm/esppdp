@@ -119,6 +119,21 @@ void sim_close_sock (SOCKET sock)
 return;
 }
 
+int sim_parse_addr (const char *cptr, char *host, size_t host_len, const char *default_host, char *port, size_t port_len, const char *default_port, const char *validate_addr) {
+	return -1;
+}
+
+int sim_check_conn (SOCKET sock, int rd) {
+	return -1;
+}
+
+SOCKET sim_accept_conn_ex (SOCKET master, char **connectaddr, int opt_flags) {
+	return -1;
+}
+
+int sim_getnames_sock (SOCKET sock, char **socknamebuf, char **peernamebuf) {
+	return 0;
+}
 
 #ifdef  __cplusplus
 }

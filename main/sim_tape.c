@@ -3640,7 +3640,7 @@ if ((cptr == NULL) || (*cptr == 0))
     return SCPE_ARG;
 if (uptr->flags & UNIT_ATT)
     return SCPE_ALATT;
-cap = (t_addr) get_uint (cptr, 10, sim_taddr_64? 2000000: 2000, &r);
+cap = (t_addr) get_uint (cptr, 10, 2000, &r);
 if (r != SCPE_OK)
     return SCPE_ARG;
 uptr->capac = cap * ((t_addr) 1000000);

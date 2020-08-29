@@ -2389,7 +2389,7 @@ return SCPE_OK;
 t_stat tq_set_type (UNIT *uptr, int32 val, CONST char *cptr, void *desc)
 {
 uint32 i, cap;
-uint32 max = sim_taddr_64? TQU_EMAXC: TQU_MAXC;
+uint32 max = TQU_MAXC;
 t_stat r;
 
 if ((val < 0) || (val > TQU_TYPE) || ((val != TQU_TYPE) && cptr))

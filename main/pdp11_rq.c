@@ -2842,7 +2842,7 @@ return SCPE_OK;
 t_stat rq_set_type (UNIT *uptr, int32 val, CONST char *cptr, void *desc)
 {
 uint32 cap;
-uint32 max = sim_toffset_64? RA8U_EMAXC: RA8U_MAXC;
+uint32 max = RA8U_MAXC;
 t_stat r;
 
 if ((val < 0) || ((val != RA8U_DTYPE) && cptr))

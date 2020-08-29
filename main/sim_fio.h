@@ -89,8 +89,6 @@ void sim_shmem_close (SHMEM *shmem);
 int32 sim_shmem_atomic_add (int32 *ptr, int32 val);
 t_bool sim_shmem_atomic_cas (int32 *ptr, int32 oldv, int32 newv);
 
-extern t_bool sim_taddr_64;         /* t_addr is > 32b and Large File Support available */
-extern t_bool sim_toffset_64;       /* Large File (>2GB) file I/O support */
 extern t_bool sim_end;              /* TRUE = little endian, FALSE = big endian */
 
 #ifdef  __cplusplus
