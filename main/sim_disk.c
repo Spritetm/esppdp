@@ -209,6 +209,7 @@ t_stat sim_disk_rdsect (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectsread, 
 t_stat sim_disk_rdsect_a (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectsread, t_seccnt sects, DISK_PCALLBACK callback) {
 	t_stat r=sim_disk_rdsect(uptr, lba, buf, sectsread, sects);
 	callback(uptr, r);
+	return SCPE_OK;
 }
 
 /* Write Sectors */
@@ -238,11 +239,13 @@ t_stat sim_disk_wrsect (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectswritte
 t_stat sim_disk_wrsect_a (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectswritten, t_seccnt sects, DISK_PCALLBACK callback) {
 	t_stat r=sim_disk_wrsect(uptr, lba, buf, sectswritten, sects);
 	callback(uptr, r);
+	return SCPE_OK;
 }
 
 t_stat sim_disk_unload (UNIT *uptr) {
 	struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
 	fclose(uptr->fileref);  /* remove/eject disk */
+	return SCPE_OK;
 }
 
 
