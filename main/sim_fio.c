@@ -60,6 +60,7 @@
 */
 
 #include "sim_defs.h"
+#include "scp.h"
 
 t_bool sim_end;                     /* TRUE = little endian, FALSE = big endian */
 

@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include "sim_tmxr.h"
+#include "sim_term.h"
 
 #ifndef SIMH_SERHANDLE_DEFINED
 #define SIMH_SERHANDLE_DEFINED 0
@@ -90,6 +90,7 @@ typedef struct SERPORT *SERHANDLE;
 /* Common definitions */
 
 /* Global routines */
+typedef void TMLN;
 
 extern SERHANDLE sim_open_serial    (char *name, TMLN *lp, t_stat *status);
 extern t_stat    sim_config_serial  (SERHANDLE port, CONST char *config);

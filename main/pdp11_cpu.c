@@ -230,6 +230,8 @@
 
 #include "pdp11_defs.h"
 #include "pdp11_cpumod.h"
+#include "sim_term.h"
+
 
 #define PCQ_SIZE        64                              /* must be 2**n */
 #define PCQ_MASK        (PCQ_SIZE - 1)

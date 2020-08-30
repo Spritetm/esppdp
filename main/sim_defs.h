@@ -1077,7 +1077,7 @@ struct MEMFILE {
 /* Function prototypes */
 
 #include "scp.h"
-#include "sim_console.h"
+//#include "sim_console.h"
 #include "sim_timer.h"
 #include "sim_fio.h"
 

@@ -86,6 +86,8 @@
 #define NOT_MUX_USING_CODE /* sim_tmxr library provider or agnostic */
 
 #include "sim_defs.h"
+#include "sim_term.h"
+#include "sim_evtq.h"
 #include <ctype.h>
 #include <math.h>
 
@@ -1188,6 +1190,7 @@ return (sim_idle_rate_ms != 0);
 /* sim_show_timers - show running timer information */
 t_stat sim_show_timers (FILE* st, DEVICE *dptr, UNIT* uptr, int32 val, CONST char* desc)
 {
+#if 0
 int tmr, clocks;
 struct timespec now;
 time_t time_t_now;
@@ -1315,6 +1318,7 @@ for (tmr=clocks=0; tmr<=SIM_NTIMERS; ++tmr) {
     }
 if (clocks == 0)
     fprintf (st, "%s clock device is not specified, co-scheduling is unavailable\n", sim_name);
+#endif
 return SCPE_OK;
 }
 
@@ -1792,13 +1796,13 @@ else if (sim_idle_rate_ms == 0) {
 else {
     if (*cptr == '\0')
         return sim_messagef (SCPE_ARG, "Missing throttle mode specification\n");
-    val = strtotv (cptr, &tptr, 10);
+    val = strtol (cptr, &tptr, 10);
     if (cptr == tptr)
         return sim_messagef (SCPE_ARG, "Invalid throttle specification: %s\n", cptr);
     sim_throt_sleep_time = sim_idle_rate_ms;
     c = (char)toupper (*tptr++);
     if (c == '/') {
-        val2 = strtotv (tptr, &tptr, 10);
+        val2 = strtol (tptr, &tptr, 10);
         if ((*tptr != '\0') || (val == 0))
             return sim_messagef (SCPE_ARG, "Invalid throttle delay specifier: %s\n", cptr);
         }
@@ -3433,6 +3437,7 @@ sim_rom_delay = delay;
  */
 void sim_timer_precalibrate_execution_rate (void)
 {
+#if 0
 const char **cmd = sim_clock_precalibrate_commands;
 uint32 start, end;
 int32 saved_switches = sim_switches;
@@ -3470,6 +3475,7 @@ for (tmr=0; tmr<=SIM_NTIMERS; tmr++) {
     }
 sim_inst_per_sec_last = sim_precalibrate_ips;
 sim_idle_stable = 0;
+#endif
 }
 
 double 

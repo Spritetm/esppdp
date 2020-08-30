@@ -148,13 +148,10 @@ t_bool sim_disk_wrp (UNIT *uptr) {
 t_offset sim_disk_size (UNIT *uptr) {
 	struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
 	t_offset physical_size, filesystem_size;
-	t_bool saved_quiet = sim_quiet;
 
 	if ((uptr->flags & UNIT_ATT) == 0) return (t_offset)-1;
 	physical_size = ctx->container_size;
-	sim_quiet = TRUE;
 	filesystem_size = physical_size;
-	sim_quiet = saved_quiet;
 	printf("sim_disk_size: phys %d fs %d\n", (int)physical_size, (int)filesystem_size);
 	if ((filesystem_size == (t_offset)-1) || (filesystem_size < physical_size)) return physical_size;
 	return filesystem_size;
@@ -276,7 +273,7 @@ t_stat sim_disk_attach_ex (UNIT *uptr, const char *cptr, size_t sector_size, siz
 	uptr->filename = (char *) calloc (CBUFSIZE, sizeof (char));/* alloc name buf */
 	uptr->disk_ctx = ctx = (struct disk_context *)calloc(1, sizeof(struct disk_context));
 	if ((uptr->filename == NULL) || (uptr->disk_ctx == NULL))  return SCPE_MEM;
-	strlcpy (uptr->filename, cptr, CBUFSIZE);               /* save name */
+	strncpy (uptr->filename, cptr, CBUFSIZE);               /* save name */
 	ctx->sector_size = (uint32)sector_size;                 /* save sector_size */
 	ctx->capac_factor = ((dptr->dwidth / dptr->aincr) >= 32) ? 8 : ((dptr->dwidth / dptr->aincr) == 16) ? 2 : 1; /* save capacity units (quadword: 8, word: 2, byte: 1) */
 	ctx->xfer_element_size = (uint32)xfer_element_size;     /* save xfer_element_size */
@@ -367,12 +364,14 @@ t_stat sim_disk_pdp11_bad_block (UNIT *uptr, int32 sec, int32 wds) {
 }
 
 void sim_disk_data_trace(UNIT *uptr, const uint8 *data, size_t lba, size_t len, const char* txt, int detail, uint32 reason) {
+/*
 	DEVICE *dptr = find_dev_from_unit (uptr);
 	if (sim_deb && ((uptr->dctrl | dptr->dctrl) & reason)) {
 		char pos[32];
 		sprintf (pos, "lbn: %08X ", (unsigned int)lba);
 		sim_data_trace(dptr, uptr, (detail ? data : NULL), pos, len, txt, reason);
 	}
+*/
 }
 
 

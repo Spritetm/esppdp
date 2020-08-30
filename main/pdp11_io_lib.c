@@ -34,7 +34,7 @@
 #include "pdp11_defs.h"
 #endif
 #include "sim_sock.h"
-#include "sim_tmxr.h"
+#include "sim_term.h"
 #include "sim_ether.h"
 
 extern int32 int_vec[IPL_HLVL][32];
@@ -281,11 +281,12 @@ return SCPE_OK;
 
 t_stat show_vec_mux (FILE *st, UNIT *uptr, int32 arg, CONST void *desc)
 {
-const TMXR *mp = (const TMXR *) desc;
+//const TMXR *mp = (const TMXR *) desc;
 
-if ((mp == NULL) || (arg == 0))
-    return SCPE_IERR;
-return show_vec (st, uptr, ((mp->lines * 2) / arg), desc);
+//if ((mp == NULL) || (arg == 0))
+//    return SCPE_IERR;
+//return show_vec (st, uptr, ((mp->lines * 2) / arg), desc);
+	return SCPE_OK;
 }
 
 /* Init Unibus tables */
