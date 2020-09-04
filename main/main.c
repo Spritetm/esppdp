@@ -23,3 +23,9 @@ void app_main(void) {
     esp_restart();
 }
 
+int nanosleep(const struct timespec *req, struct timespec *rem) {
+	rem->tv_sec=0;
+	rem->tv_nsec=0;
+	return 0;
+}
+

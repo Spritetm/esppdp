@@ -25,11 +25,13 @@ t_stat sim_set_pchar (int32 flag, CONST char *cptr) {
 
 
 t_stat sim_poll_kbd (void) {
+#ifndef ESP_PLATFORM
 	int bytesWaiting;
 	ioctl(0, FIONREAD, &bytesWaiting);
 	if (bytesWaiting!=0) {
 		return getchar() | SCPE_KFLAG;
 	}
+#endif
 	return SCPE_OK;
 }
 
@@ -117,11 +119,13 @@ t_stat sim_tt_set_parity (UNIT *uptr, int32 val, CONST char *cptr, void *desc) {
 
 //Called in main to init tt
 t_stat sim_ttinit (void) {
+#ifndef ESP_PLATFORM
 	struct termios term;
 	tcgetattr(0, &term);
 	term.c_lflag &= ~ICANON;
 	tcsetattr(0, TCSANOW, &term);
 	setbuf(stdin, NULL);
+#endif
 	return SCPE_OK;
 }
 

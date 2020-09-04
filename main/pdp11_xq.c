@@ -624,7 +624,7 @@ t_stat xq_ex (t_value* vptr, t_addr addr, UNIT* uptr, int32 sw)
 {
   /* on PDP-11, allow EX command to look at bootrom */
   CTLR* xq = xq_unit2ctlr(uptr);
-  uint16 *bootrom = NULL;
+  const uint16 *bootrom = NULL;
 
   if (xq->var->type == XQ_T_DEQNA)
     bootrom = xq_bootrom_deqna;

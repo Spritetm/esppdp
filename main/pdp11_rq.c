@@ -149,7 +149,7 @@ extern int32 MMR2;
 #define RQ_DHTMO        60                              /* def host timeout */
 #define RQ_DCTMO        120                             /* def ctrl timeout */
 #define RQ_NUMDR        4                               /* def # drives */
-#define RQ_MAXDR        254                             /* max # drives */
+#define RQ_MAXDR        2                             /* max # drives */
 #define RQ_NUMBY        512                             /* bytes per block */
 #define RQ_MAXFR        (1 << 16)                       /* max xfer */
 #define RQ_MAPXFER      (1u << 31)                      /* mapped xfer */
@@ -989,7 +989,7 @@ UNIT rq_unit[RQ_MAXDR + 2] = {
             (RX50_DTYPE << UNIT_V_DTYPE), RQ_SIZE (RX50)) },
     };
 
-REG rq_reg[] = {
+const REG rq_reg[] = {
     { GRDATAD (SA,      rq_ctx.sa,      DEV_RDX, 16, 0, "status/address register") },
     { GRDATAD (SAW,     rq_ctx.saw,     DEV_RDX, 16, 0, "written data") },
     { GRDATAD (S1DAT,   rq_ctx.s1dat,   DEV_RDX, 16, 0, "step 1 init host data") },
@@ -1031,7 +1031,7 @@ REG rq_reg[] = {
     { NULL }
     };
 
-MTAB rq_mod[] = {
+const MTAB rq_mod[] = {
     { UNIT_WLK,                 0,  NULL, "WRITEENABLED", 
         &rq_set_wlk, NULL, NULL, "Write enable disk drive" },
     { UNIT_WLK,          UNIT_WLK,  NULL, "LOCKED", 
@@ -1158,7 +1158,7 @@ DEVICE rq_dev = {
 
 MSC rqb_ctx = { 1 };
 
-DIB rqb_dib = {
+const DIB rqb_dib = {
     IOBA_AUTO, IOLN_RQ, &rq_rd, &rq_wr,
     1, IVCL (RQ), 0, { &rq_inta }, IOLN_RQ
     };
@@ -1174,7 +1174,7 @@ UNIT rqb_unit[RQ_MAXDR + 2] = {
             (RD54_DTYPE << UNIT_V_DTYPE), RQ_SIZE (RD54)) },
     };
 
-REG rqb_reg[] = {
+const REG rqb_reg[] = {
     { GRDATAD (SA,      rqb_ctx.sa,      DEV_RDX, 16, 0, "status/address register") },
     { GRDATAD (SAW,     rqb_ctx.saw,     DEV_RDX, 16, 0, "written data") },
     { GRDATAD (S1DAT,   rqb_ctx.s1dat,   DEV_RDX, 16, 0, "step 1 init host data") },
@@ -1247,7 +1247,7 @@ UNIT rqc_unit[RQ_MAXDR + 2] = {
             (RD54_DTYPE << UNIT_V_DTYPE), RQ_SIZE (RD54)) },
     };
 
-REG rqc_reg[] = {
+const REG rqc_reg[] = {
     { GRDATAD (SA,      rqc_ctx.sa,      DEV_RDX, 16, 0, "status/address register") },
     { GRDATAD (SAW,     rqc_ctx.saw,     DEV_RDX, 16, 0, "written data") },
     { GRDATAD (S1DAT,   rqc_ctx.s1dat,   DEV_RDX, 16, 0, "step 1 init host data") },
@@ -1320,7 +1320,7 @@ UNIT rqd_unit[RQ_MAXDR + 2] = {
             (RD54_DTYPE << UNIT_V_DTYPE), RQ_SIZE (RD54)) },
     };
 
-REG rqd_reg[] = {
+const REG rqd_reg[] = {
     { GRDATAD (SA,      rqd_ctx.sa,      DEV_RDX, 16, 0, "status/address register") },
     { GRDATAD (SAW,     rqd_ctx.saw,     DEV_RDX, 16, 0, "written data") },
     { GRDATAD (S1DAT,   rqd_ctx.s1dat,   DEV_RDX, 16, 0, "step 1 init host data") },
@@ -1374,6 +1374,7 @@ static DEVICE *rq_devmap[RQ_NUMCT] = {
 static MSC *rq_ctxmap[RQ_NUMCT] = {
     &rq_ctx, &rqb_ctx, &rqc_ctx, &rqd_ctx
     };
+
 
 /* I/O dispatch routines, I/O addresses 17772150 - 17772152
 

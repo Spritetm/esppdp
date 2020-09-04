@@ -599,7 +599,7 @@ typedef struct {
     uint32      fixv[AUTO_MAXC];
     } AUTO_CON;
 
-AUTO_CON auto_tab[] = {/*c  #v  am vm  fxa   fxv */
+const AUTO_CON auto_tab[] = {/*c  #v  am vm  fxa   fxv */
     { { "QBA" },         1,  0,  0, 0, 
         {017500} },                                     /* doorbell - fx CSR, no VEC */
     { { "MCTL" },        1,  0,  0, 0, 
