@@ -45,8 +45,6 @@ extern int32 int_vec[IPL_HLVL][32];
 extern int32 int_vec_set[IPL_HLVL][32];                 /* bits to set in vector */
 #endif
 extern int32 (*int_ack[IPL_HLVL][32])(void);
-extern t_stat (*iodispR[IOPAGESIZE >> 1])(int32 *dat, int32 ad, int32 md);
-extern t_stat (*iodispW[IOPAGESIZE >> 1])(int32 dat, int32 ad, int32 md);
 extern DIB *iodibp[IOPAGESIZE >> 1];
 
 extern t_stat build_dib_tab (void);
@@ -303,8 +301,6 @@ for (i = 0; i < IPL_HLVL; i++) {                        /* clear intr tab */
         }
     }
 for (i = 0; i < (IOPAGESIZE >> 1); i++) {               /* clear dispatch tab */
-    iodispR[i] = NULL;
-    iodispW[i] = NULL;
     iodibp[i] = NULL;
     }
 return;
@@ -399,21 +395,21 @@ for (i = 0; i < dibp->vnum; i++) {                      /* loop thru vec */
 /* Register(Deregister) I/O space address and check for conflicts */
 for (i = 0; i < (int32) dibp->lnt; i = i + 2) {         /* create entries */
     idx = ((dibp->ba + i) & IOPAGEMASK) >> 1;           /* index into disp */
-    if ((iodispR[idx] && dibp->rd &&                    /* conflict? */
-        (iodispR[idx] != dibp->rd)) ||
-        (iodispW[idx] && dibp->wr &&
-        (iodispW[idx] != dibp->wr))) {
+    if ((iodibp[idx] && iodibp[idx]->rd && dibp->rd &&                    /* conflict? */
+        (iodibp[idx]->rd != dibp->rd)) ||
+        (iodibp[idx] && iodibp[idx]->wr && dibp->wr &&
+        (iodibp[idx]->wr != dibp->wr))) {
         for (j = 0; (cdptr = sim_devices[j]) != NULL; j++) { /* Find conflicting device */
             DIB *cdibp = (DIB *)(cdptr->ctxt);
             if ((cdptr->flags & DEV_DIS) || !cdibp || cdibp == dibp) {
                 continue;
                 }
-            if ((iodispR[idx] && dibp->rd &&
-                (iodispR[idx] != dibp->rd) &&
-                (cdibp->rd == iodispR[idx])) ||
-                (iodispW[idx] && dibp->wr &&
-                (iodispW[idx] != dibp->wr) &&
-                (cdibp->wr == iodispW[idx]))) {
+            if ((iodibp[idx] && iodibp[idx]->rd && dibp->rd &&
+                (iodibp[idx] != dibp->rd) &&
+                (cdibp->rd == iodibp[idx]->rd)) ||
+                (iodibp[idx] && iodibp[idx]->wr && dibp->wr &&
+                (iodibp[idx]->wr != dibp->wr) &&
+                (cdibp->wr == iodibp[idx]->wr))) {
                 break;
                 }
             }
@@ -429,10 +425,6 @@ for (i = 0; i < (int32) dibp->lnt; i = i + 2) {         /* create entries */
     if ((dibp->rd == NULL) && (dibp->wr == NULL) && (dibp->vnum == 0)) 
         iodibp[idx] = NULL;                         /* deregister DIB */
     else {
-        if (dibp->rd)
-            iodispR[idx] = dibp->rd;                /* set rd dispatch */
-        if (dibp->wr)
-            iodispW[idx] = dibp->wr;                /* set wr dispatch */
         iodibp[idx] = dibp;                         /* remember DIB */
         }
     }

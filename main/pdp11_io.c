@@ -64,8 +64,6 @@ extern void fixup_mbus_tab (void);
 
 /* I/O data structures */
 
-t_stat (*iodispR[IOPAGESIZE >> 1])(int32 *dat, int32 ad, int32 md);
-t_stat (*iodispW[IOPAGESIZE >> 1])(int32 dat, int32 ad, int32 md);
 DIB *iodibp[IOPAGESIZE >> 1];
 
 int32 int_vec[IPL_HLVL][32];                            /* int req to vector */
@@ -98,8 +96,8 @@ int32 idx;
 t_stat stat;
 
 idx = (pa & IOPAGEMASK) >> 1;
-if (iodispR[idx]) {
-    stat = iodispR[idx] (data, pa, access);
+if (iodibp[idx] && iodibp[idx]->rd) {
+    stat = iodibp[idx]->rd (data, pa, access);
     trap_req = calc_ints (ipl, trap_req);
     return stat;
     }
@@ -112,8 +110,8 @@ int32 idx;
 t_stat stat;
 
 idx = (pa & IOPAGEMASK) >> 1;
-if (iodispW[idx]) {
-    stat = iodispW[idx] (data, pa, access);
+if (iodibp[idx] && iodibp[idx]->wr) {
+    stat = iodibp[idx]->wr (data, pa, access);
     trap_req = calc_ints (ipl, trap_req);
     return stat;
     }
