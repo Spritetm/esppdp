@@ -24,8 +24,12 @@ void app_main(void) {
 }
 
 int nanosleep(const struct timespec *req, struct timespec *rem) {
-	rem->tv_sec=0;
-	rem->tv_nsec=0;
+	//We don't have signals; no need to write to rem
+	int wait_ms=req->tv_nsec/1000000L+req->tv_sec*1000;
+//	printf("sleep %d ms (%ld ns)\n", wait_ms, req->tv_nsec);
+	int wait_ticks=wait_ms/portTICK_PERIOD_MS;
+	if (wait_ticks==0) wait_ticks=1;
+	vTaskDelay(wait_ticks);
 	return 0;
 }
 

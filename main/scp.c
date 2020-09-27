@@ -276,12 +276,12 @@ DEVICE *find_dev (const char *cptr) {
 		}
 	}
 
-	printf("find_dev %s failed\n", cptr);
+//	printf("find_dev %s failed\n", cptr);
 	return NULL;
 }
 
 DEVICE *find_unit (const char *cptr, UNIT **uptr) {
-	printf("find_unit: %s\n", cptr);
+	printf("find_unit: %s STUB\n", cptr);
 	return NULL;
 }
 
@@ -477,7 +477,6 @@ t_stat attach_err (UNIT *uptr, t_stat stat) {
 t_stat attach_unit (UNIT *uptr, CONST char *cptr) {
 	DEVICE *dptr;
 	t_bool open_rw = FALSE;
-	
 	if (!(uptr->flags & UNIT_ATTABLE)) return SCPE_NOATT;
 	if ((dptr = find_dev_from_unit (uptr)) == NULL) return SCPE_NOATT;
 	uptr->filename = (char *) calloc (CBUFSIZE, sizeof (char)); /* alloc name buf */
@@ -855,7 +854,8 @@ int main (int argc, char *argv[]) {
 
 	//Set main memory capacity...
 	DEVICE *cpudev=find_dev("CPU");
-	cpudev->units[0].capac=3072*1024;
+//	cpudev->units[0].capac=3072*1024;
+	cpudev->units[0].capac=1024*1024;
 
 	if ((stat = reset_all (0)) != SCPE_OK) {
 		fprintf (stderr, "Fatal simulator initialization error\n%s\n",
@@ -875,12 +875,16 @@ int main (int argc, char *argv[]) {
 	
 	
 	//find rq device, boot off it
+	printf("Find RQ\n");
 	DEVICE *dev=find_dev("RQ");
+	printf("Attach disk to RQ\n");
 	stat=dev->attach(dev->units, "media/root.dsk");
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
+	printf("Boot from RQ\n");
 	stat=dev->boot(0, dev);
 	if (stat!=SCPE_OK) printf("Boot failed...\n");
 
+	printf("Main sim start\n");
 	while(1) {
 		stat=sim_instr();
 		if (stat!=SCPE_OK) {

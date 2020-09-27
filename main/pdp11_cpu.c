@@ -3371,8 +3371,11 @@ trap_req = 0;
 wait_state = 0;
 if (M == NULL) {                    /* First time init */
     M = (uint16 *) calloc (MEMSIZE >> 1, sizeof (uint16));
-    if (M == NULL)
+	
+    if (M == NULL) {
+		printf("Main mem alloc fail!\n");
         return SCPE_MEM;
+	}
     sim_set_pchar (0, "01000023640"); /* ESC, CR, LF, TAB, BS, BEL, ENQ */
     sim_brk_dflt = SWMASK ('E');
     sim_brk_types = sim_brk_dflt|SWMASK ('P')|
