@@ -107,6 +107,10 @@ uint32 sim_idle_ms_sleep (unsigned int msec);
 /* that slow a clock tick on the development platform                        */
 //#define MS_MIN_GRANULARITY 20   /* Uncomment to simulate 20ms host tick size.*/
                                 /* some Solaris and BSD hosts come this way  */
+#ifdef ESP_PLATFORM
+#define MS_MIN_GRANULARITY 10
+#endif
+
 
 #if defined(MS_MIN_GRANULARITY) && (MS_MIN_GRANULARITY != 1)
 uint32 real_sim_idle_ms_sleep (unsigned int msec);

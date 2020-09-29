@@ -23,6 +23,9 @@ t_stat sim_set_pchar (int32 flag, CONST char *cptr) {
 	return SCPE_OK;
 }
 
+#ifdef ESP_PLATFORM
+#include "bthid.h"
+#endif
 
 t_stat sim_poll_kbd (void) {
 #ifndef ESP_PLATFORM
@@ -31,6 +34,11 @@ t_stat sim_poll_kbd (void) {
 	if (bytesWaiting!=0) {
 		return getchar() | SCPE_KFLAG;
 	}
+#else
+	int c=getchar();
+	if (c!=EOF) return c|SCPE_KFLAG;
+	c=bthid_getchar();
+	if (c!=-1) return c|SCPE_KFLAG;
 #endif
 	return SCPE_OK;
 }
@@ -69,8 +77,8 @@ int32 sim_tt_inpcvt (int32 c, uint32 mode) {
 /* Output character processing */
 
 int32 sim_tt_outcvt (int32 c, uint32 mode) {
+#if 1
 	uint32 md = mode & TTUF_M_MODE;
-
 	if (md != TTUF_MODE_8B) {
 		c = c & 0177;
 		if (md == TTUF_MODE_UC) {
@@ -85,6 +93,7 @@ int32 sim_tt_outcvt (int32 c, uint32 mode) {
 	} else {
 		c = c & 0377;
 	}
+#endif
 	return c;
 }
 
@@ -94,7 +103,14 @@ t_stat tmxr_set_console_units (UNIT *rxuptr, UNIT *txuptr) {
 	return SCPE_OK;
 }
 
+#ifdef ESP_PLATFORM
+#include "ie15lcd.h"
+#endif
+
 t_stat sim_putchar_s (int32 c) {
+#ifdef ESP_PLATFORM
+	ie15_sendchar(c);
+#endif
 	putchar(c);
 	return SCPE_OK;
 }

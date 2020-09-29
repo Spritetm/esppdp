@@ -178,7 +178,7 @@ t_stat sim_disk_rdsect (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectsread, 
 	uint32 err, tbc;
 	size_t i;
 	struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
-	printf("sim_disk_rdsect(unit=%d, lba=0x%X, sects=%d)\n", (int)(uptr - ctx->dptr->units), lba, sects);
+//	printf("sim_disk_rdsect(unit=%d, lba=0x%X, sects=%d)\n", (int)(uptr - ctx->dptr->units), lba, sects);
 
 	da = ((t_offset)lba) * ctx->sector_size;
 	tbc = sects * ctx->sector_size;
@@ -217,7 +217,7 @@ t_stat sim_disk_wrsect (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectswritte
 	size_t i;
 	struct disk_context *ctx = (struct disk_context *)uptr->disk_ctx;
 
-	printf("_sim_disk_wrsect(unit=%d, lba=0x%X, sects=%d)\n", (int)(uptr - ctx->dptr->units), lba, sects);
+//	printf("_sim_disk_wrsect(unit=%d, lba=0x%X, sects=%d)\n", (int)(uptr - ctx->dptr->units), lba, sects);
 	
 	da = ((t_offset)lba) * ctx->sector_size;
 	tbc = sects * ctx->sector_size;

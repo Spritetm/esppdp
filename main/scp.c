@@ -483,19 +483,26 @@ t_stat attach_unit (UNIT *uptr, CONST char *cptr) {
 	if (uptr->filename == NULL) return SCPE_MEM;
 	strncpy (uptr->filename, cptr, CBUFSIZE);				/* save name */
 	uptr->fileref = sim_fopen (cptr, "rb+");		/* open r/w */
+	printf("Ref %p\n", uptr->fileref );
 	if (uptr->fileref == NULL) {					/* open fail? */
-		if ((errno == EROFS) || (errno == EACCES)) {/* read only? */
+//		if ((errno == EROFS) || (errno == EACCES)) {/* read only? */
 			return attach_err (uptr, SCPE_OPENERR); /* yes, error */
-		} else {
-			open_rw = TRUE;
-		}												/* end else */
+//		} else {
+//			open_rw = TRUE;
+//		}												/* end else */
 	}
 	if (uptr->flags & UNIT_BUFABLE) {						/* buffer? */
 		uint32 cap = ((uint32) uptr->capac) / dptr->aincr;	/* effective size */
+	printf("Ref %p\n", uptr->fileref );
 		if (uptr->flags & UNIT_MUSTBUF) uptr->filebuf = calloc (cap, SZ_D (dptr));		/* allocate */
-		if (uptr->filebuf == NULL) return attach_err (uptr, SCPE_MEM);				/* error */
+	printf("Ref %p\n", uptr->fileref );
+		if (uptr->filebuf == NULL) {
+			printf("Eek! Couldn't allocate memory for disk buffer (%d bytes)\n", cap*SZ_D(dptr));
+			return attach_err (uptr, SCPE_MEM);				/* error */
+		}
 		sim_messagef (SCPE_OK, "%s: buffering file in memory\n", sim_dname (dptr));
-		uptr->hwmark = (uint32)sim_fread (uptr->filebuf, SZ_D (dptr), cap, uptr->fileref);
+	printf("Ref %p\n", uptr->fileref );
+		uptr->hwmark = (uint32)sim_fread(uptr->filebuf, SZ_D (dptr), cap, uptr->fileref);
 		uptr->flags = uptr->flags | UNIT_BUF;				/* set buffered */
 	}
 	uptr->flags = uptr->flags | UNIT_ATT;
@@ -875,20 +882,35 @@ int main (int argc, char *argv[]) {
 	
 	
 	//find rq device, boot off it
+#if 1
 	printf("Find RQ\n");
 	DEVICE *dev=find_dev("RQ");
 	printf("Attach disk to RQ\n");
-	stat=dev->attach(dev->units, "media/root.dsk");
+	stat=dev->attach(dev->units, "/sdcard/rq.dsk");
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
 	printf("Boot from RQ\n");
+#else
+	printf("Find RX\n");
+	DEVICE *dev=find_dev("RX");
+	printf("Attach disk to RX\n");
+#ifndef ESP_PLATFORM
+	stat=attach_unit(dev->units, "../../spiffs/floppy.dsk");
+#else
+	stat=attach_unit(dev->units, "/spiffs/floppy.dsk");
+#endif
+	if (stat!=SCPE_OK) printf("Attach failed...\n");
+	printf("Boot from RX\n");
+#endif
 	stat=dev->boot(0, dev);
 	if (stat!=SCPE_OK) printf("Boot failed...\n");
+
+	sim_set_throt(1, "10%");
 
 	printf("Main sim start\n");
 	while(1) {
 		stat=sim_instr();
 		if (stat!=SCPE_OK) {
-			printf("Sim_instr exited with 0x%X\n", stat);
+//			printf("Sim_instr exited with 0x%X\n", stat);
 //			exit(0);
 		}
 	}
