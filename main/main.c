@@ -30,8 +30,16 @@
 
 int main(int argc, char **argv);
 
+#include "esp_heap_trace.h"
+
+#define NUM_RECORDS 100
+static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
+
 void app_main(void) {
     esp_err_t ret;
+#if CONFIG_HEAP_TRACING_STANDALONE
+	ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
+#endif
 
     /* Initialize NVS — it is used to store PHY calibration data */
     ret = nvs_flash_init();
@@ -45,7 +53,7 @@ void app_main(void) {
 	//We cheat here: as the buffer in the IE15 emu is only 8 bytes, the following routine
 	//will only finish after the initialization is complete.
 	const char signon[]="Initializing emulator...\r\n";
-	for (char *p=signon; *p!=0; p++) ie15_sendchar(*p);
+	for (const char *p=signon; *p!=0; p++) ie15_sendchar(*p);
 
 #if 1
 	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -96,7 +104,10 @@ void app_main(void) {
 
 	bthid_start();
 
-	printf("Hello world!\n");
+#if CONFIG_HEAP_TRACING_STANDALONE
+	ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
+	ESP_ERROR_CHECK( heap_trace_start(HEAP_TRACE_LEAKS) );
+#endif
 	char *args[]={"simh", 0};
 	main(1, args);
     fflush(stdout);
@@ -108,8 +119,8 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
 	int wait_ms=req->tv_nsec/1000000L+req->tv_sec*1000;
 //	printf("sleep %d ms (%ld ns)\n", wait_ms, req->tv_nsec);
 	int wait_ticks=wait_ms/portTICK_PERIOD_MS;
-	if (wait_ticks==0) wait_ticks=1;
-	vTaskDelay(wait_ticks);
+//	if (wait_ticks==0) wait_ticks=1;
+	if (wait_ticks) vTaskDelay(wait_ticks);
 	return 0;
 }
 

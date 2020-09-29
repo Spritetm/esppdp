@@ -174,7 +174,7 @@ DEVICE *sim_devices[] = {
 //    &hk_dev,
     &rx_dev,
 //    &ry_dev,
-    &rp_dev,
+//    &rp_dev,
 //    &rs_dev,
     &rq_dev,
 //    &rqb_dev,

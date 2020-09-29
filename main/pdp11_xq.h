@@ -82,7 +82,9 @@
 
 #include "sim_ether.h"
 
-#define XQ_QUE_MAX           500                        /* read queue size in packets */
+//#define XQ_QUE_MAX           500                        /* read queue size in packets */
+#define XQ_QUE_MAX           8                        /* read queue size in packets */
+
 #define XQ_FILTER_MAX         14                        /* number of filters allowed */
 #if defined(SIM_ASYNCH_IO) && defined(USE_READER_THREAD)
 #define XQ_SERVICE_INTERVAL  0                          /* polling interval - No Polling with Asynch I/O */

@@ -24,7 +24,9 @@ t_stat sim_set_pchar (int32 flag, CONST char *cptr) {
 }
 
 #ifdef ESP_PLATFORM
+#include "sdkconfig.h"
 #include "bthid.h"
+#include "esp_heap_trace.h"
 #endif
 
 t_stat sim_poll_kbd (void) {
@@ -36,6 +38,13 @@ t_stat sim_poll_kbd (void) {
 	}
 #else
 	int c=getchar();
+//If tracing is enabled, '|' dumps the trace.
+#if CONFIG_HEAP_TRACING_STANDALONE
+	if (c=='|') {
+		ESP_ERROR_CHECK( heap_trace_stop() );
+		heap_trace_dump();
+	}
+#endif
 	if (c!=EOF) return c|SCPE_KFLAG;
 	c=bthid_getchar();
 	if (c!=-1) return c|SCPE_KFLAG;
@@ -77,7 +86,6 @@ int32 sim_tt_inpcvt (int32 c, uint32 mode) {
 /* Output character processing */
 
 int32 sim_tt_outcvt (int32 c, uint32 mode) {
-#if 1
 	uint32 md = mode & TTUF_M_MODE;
 	if (md != TTUF_MODE_8B) {
 		c = c & 0177;
@@ -93,7 +101,6 @@ int32 sim_tt_outcvt (int32 c, uint32 mode) {
 	} else {
 		c = c & 0377;
 	}
-#endif
 	return c;
 }
 

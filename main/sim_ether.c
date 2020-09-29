@@ -389,9 +389,11 @@ return eth_mac_scan_ex (mac, strmac, NULL);
 
 t_stat eth_mac_scan_ex (ETH_MAC* mac, const char* strmac, UNIT *uptr)
 {
-  static const ETH_MAC zeros = {0,0,0,0,0,0};
-  /* copy into passed mac */
-  memcpy (*mac, zeros, sizeof(ETH_MAC));
+  //trivial mac scan function
+  unsigned int m[6]={};
+  sscanf(strmac, "%x:%x:%x:%x:%x:%x", &m[0], &m[1], &m[2], &m[3], &m[4], &m[5]);
+  uint8_t *macbytes=*mac;
+  for (int i=0; i<6; i++) macbytes[i]=m[i];
   return SCPE_OK;
 }
 

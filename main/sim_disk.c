@@ -188,13 +188,19 @@ t_stat sim_disk_rdsect (UNIT *uptr, t_lba lba, uint8 *buf, t_seccnt *sectsread, 
 		size_t sectbytes;
 
 		err = fseek(uptr->fileref, da, SEEK_SET);			 /* set pos */
-		if (err) return SCPE_IOERR;
+		if (err) {
+			printf("ERROR: fseek to %d: error %d\n", (int)da, err);
+			return SCPE_IOERR;
+		}
 		i = fread(buf, 1, tbc, uptr->fileref);
 		if (i < tbc) memset (&buf[i], 0, tbc-i);
 		if (sectsread) *sectsread += i / ctx->sector_size;
 		sectbytes = (i / ctx->sector_size) * ctx->sector_size;
 		err = ferror (uptr->fileref);
-		if (err) return SCPE_IOERR;
+		if (err) {
+			printf("ERROR: fread from %d: error %d\n", (int)da, err);
+			return SCPE_IOERR;
+		}
 		tbc -= sectbytes;
 		if ((tbc == 0) || (i == 0)) return SCPE_OK;
 		da += sectbytes;

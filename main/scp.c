@@ -819,6 +819,20 @@ t_stat sim_register_internal_device (DEVICE *dptr) {
 	return SCPE_OK;
 }
 
+//Hacky way to resolve/set modifiers on a device
+t_stat set_mod(DEVICE *dev, UNIT *unit, const char *mod, const char *cp, void *dp) {
+	MTAB *p=dev->modifiers;
+	while (p->mask) {
+//		printf("Modifier '%s' '%s'\n", p->pstring?p->pstring:"NULL", p->mstring?p->mstring:"NULL");
+		if ((p->pstring && strcmp(mod, p->pstring)==0) || (p->mstring && strcmp(mod, p->mstring)==0)) {
+			return p->valid(unit, p->match, cp, dp);
+		}
+		p++;
+	}
+	printf("scp.c:set_mod(): Modifier not found on device: %s\n", mod);
+	return 0;
+}
+
 
 int main (int argc, char *argv[]) {
 	t_stat stat=SCPE_OK;
@@ -861,8 +875,7 @@ int main (int argc, char *argv[]) {
 
 	//Set main memory capacity...
 	DEVICE *cpudev=find_dev("CPU");
-//	cpudev->units[0].capac=3072*1024;
-	cpudev->units[0].capac=1024*1024;
+	cpudev->units[0].capac=3.5*1024*1024;
 
 	if ((stat = reset_all (0)) != SCPE_OK) {
 		fprintf (stderr, "Fatal simulator initialization error\n%s\n",
@@ -879,14 +892,19 @@ int main (int argc, char *argv[]) {
 	sim_timer_precalibrate_execution_rate ();
 //	show_version (stdnul, NULL, NULL, 1, NULL);				/* Quietly set SIM_OSTYPE */
 	
-	
+	DEVICE *dev=find_dev("XQ");
+	set_mod(dev, dev->units, "MAC", "f8:59:71:0a:81:79", NULL);
 	
 	//find rq device, boot off it
 #if 1
-	printf("Find RQ\n");
-	DEVICE *dev=find_dev("RQ");
-	printf("Attach disk to RQ\n");
+	dev=find_dev("RQ");
+	set_mod(dev, dev->units, "RA92", NULL, NULL);
+	printf("Attach RA92 disk to RQ\n");
+#ifndef ESP_PLATFORM
+	stat=dev->attach(dev->units, "media/root.dsk");
+#else
 	stat=dev->attach(dev->units, "/sdcard/rq.dsk");
+#endif
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
 	printf("Boot from RQ\n");
 #else
@@ -904,7 +922,7 @@ int main (int argc, char *argv[]) {
 	stat=dev->boot(0, dev);
 	if (stat!=SCPE_OK) printf("Boot failed...\n");
 
-	sim_set_throt(1, "10%");
+	sim_set_throt(1, "90%");
 
 	printf("Main sim start\n");
 	while(1) {
