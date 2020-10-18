@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <setjmp.h>
+#include "wifi_if.h"
 
 FILE *sim_deb = NULL;                                   /* debug file */
 
@@ -833,6 +834,13 @@ t_stat set_mod(DEVICE *dev, UNIT *unit, const char *mod, const char *cp, void *d
 	return 0;
 }
 
+#ifndef ESP_PLATFORM
+#define RA92_DISK_PATH "media/root.dsk"
+#define RX_FLOPPY_PATH "../../spiffs/floppy.dsk"
+#else
+#define RA92_DISK_PATH "/sdcard/rq.dsk"
+#define RX_FLOPPY_PATH "/spiffs/floppy.dsk"
+#endif
 
 int main (int argc, char *argv[]) {
 	t_stat stat=SCPE_OK;
@@ -892,30 +900,26 @@ int main (int argc, char *argv[]) {
 	sim_timer_precalibrate_execution_rate ();
 //	show_version (stdnul, NULL, NULL, 1, NULL);				/* Quietly set SIM_OSTYPE */
 	
+	//Set up network device
 	DEVICE *dev=find_dev("XQ");
-	set_mod(dev, dev->units, "MAC", "f8:59:71:0a:81:79", NULL);
-	
+	char mac[32];
+	wifi_if_get_mac(mac);
+	set_mod(dev, dev->units, "MAC", mac, NULL);
+	dev->attach(dev->units, "WIFI");
+
 	//find rq device, boot off it
 #if 1
 	dev=find_dev("RQ");
 	set_mod(dev, dev->units, "RA92", NULL, NULL);
 	printf("Attach RA92 disk to RQ\n");
-#ifndef ESP_PLATFORM
-	stat=dev->attach(dev->units, "media/root.dsk");
-#else
-	stat=dev->attach(dev->units, "/sdcard/rq.dsk");
-#endif
+	stat=dev->attach(dev->units, RA92_DISK_PATH);
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
 	printf("Boot from RQ\n");
 #else
 	printf("Find RX\n");
 	DEVICE *dev=find_dev("RX");
 	printf("Attach disk to RX\n");
-#ifndef ESP_PLATFORM
-	stat=attach_unit(dev->units, "../../spiffs/floppy.dsk");
-#else
-	stat=attach_unit(dev->units, "/spiffs/floppy.dsk");
-#endif
+	stat=attach_unit(dev->units, RX_FLOPPY_PATH);
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
 	printf("Boot from RX\n");
 #endif

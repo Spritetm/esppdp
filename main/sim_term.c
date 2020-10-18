@@ -8,6 +8,17 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#include "bthid.h"
+#include "esp_heap_trace.h"
+#include "ie15lcd.h"
+#include "esp_timer.h"
+char last_char;
+int64_t autoboot_next_evt;
+#endif
+
+
 uint32_t sim_int_char = 5;
 t_bool sim_signaled_int_char=FALSE;
 uint32 sim_last_poll_kbd_time=0;
@@ -23,11 +34,6 @@ t_stat sim_set_pchar (int32 flag, CONST char *cptr) {
 	return SCPE_OK;
 }
 
-#ifdef ESP_PLATFORM
-#include "sdkconfig.h"
-#include "bthid.h"
-#include "esp_heap_trace.h"
-#endif
 
 t_stat sim_poll_kbd (void) {
 #ifndef ESP_PLATFORM
@@ -48,6 +54,12 @@ t_stat sim_poll_kbd (void) {
 	if (c!=EOF) return c|SCPE_KFLAG;
 	c=bthid_getchar();
 	if (c!=-1) return c|SCPE_KFLAG;
+	if (esp_timer_get_time()>autoboot_next_evt) {
+		autoboot_next_evt=esp_timer_get_time()+(1000UL*1000*5);
+		if (last_char==':') return '\n'|SCPE_KFLAG;
+		if (last_char=='#') return 0x4|SCPE_KFLAG;
+	}
+
 #endif
 	return SCPE_OK;
 }
@@ -117,6 +129,7 @@ t_stat tmxr_set_console_units (UNIT *rxuptr, UNIT *txuptr) {
 t_stat sim_putchar_s (int32 c) {
 #ifdef ESP_PLATFORM
 	ie15_sendchar(c);
+	if (c!=' ') last_char=c;
 #endif
 	putchar(c);
 	return SCPE_OK;
@@ -148,6 +161,7 @@ t_stat sim_ttinit (void) {
 	term.c_lflag &= ~ICANON;
 	tcsetattr(0, TCSANOW, &term);
 	setbuf(stdin, NULL);
+	autoboot_next_evt=0;
 #endif
 	return SCPE_OK;
 }

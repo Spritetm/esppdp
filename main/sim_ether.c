@@ -374,6 +374,8 @@
 #include "sim_sock.h"
 #include "sim_timer.h"
 #include <unistd.h>
+#include "hexdump.h"
+#include "wifi_if.h"
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
@@ -382,13 +384,11 @@
 /*                  OS-independant ethernet routines                          */
 /*============================================================================*/
 
-t_stat eth_mac_scan (ETH_MAC* mac, const char* strmac)
-{
-return eth_mac_scan_ex (mac, strmac, NULL);
+t_stat eth_mac_scan (ETH_MAC* mac, const char* strmac) {
+	return eth_mac_scan_ex (mac, strmac, NULL);
 }
 
-t_stat eth_mac_scan_ex (ETH_MAC* mac, const char* strmac, UNIT *uptr)
-{
+t_stat eth_mac_scan_ex (ETH_MAC* mac, const char* strmac, UNIT *uptr) {
   //trivial mac scan function
   unsigned int m[6]={};
   sscanf(strmac, "%x:%x:%x:%x:%x:%x", &m[0], &m[1], &m[2], &m[3], &m[4], &m[5]);
@@ -397,8 +397,7 @@ t_stat eth_mac_scan_ex (ETH_MAC* mac, const char* strmac, UNIT *uptr)
   return SCPE_OK;
 }
 
-void eth_mac_fmt(ETH_MAC* const mac, char* buff)
-{
+void eth_mac_fmt(ETH_MAC* const mac, char* buff) {
   const uint8* m = (const uint8*) mac;
   sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
   return;
@@ -551,186 +550,223 @@ void eth_packet_trace_ex(ETH_DEV* dev, const uint8 *msg, int len, const char* tx
   }
 }
 
-void eth_packet_trace(ETH_DEV* dev, const uint8 *msg, int len, const char* txt)
-{
-  eth_packet_trace_ex(dev, msg, len, txt, 0, dev->dbit);
+void eth_packet_trace(ETH_DEV* dev, const uint8 *msg, int len, const char* txt) {
+	eth_packet_trace_ex(dev, msg, len, txt, 0, dev->dbit);
 }
 
-void eth_packet_trace_detail(ETH_DEV* dev, const uint8 *msg, int len, const char* txt)
-{
-  eth_packet_trace_ex(dev, msg, len, txt, 1     , dev->dbit);
+void eth_packet_trace_detail(ETH_DEV* dev, const uint8 *msg, int len, const char* txt) {
+	eth_packet_trace_ex(dev, msg, len, txt, 1     , dev->dbit);
 }
 
 
-const char* eth_getname_bydesc(const char* desc, char* name, char *ndesc)
-{
-  /* not found */
-  return NULL;
-}
-
-char* eth_getname_byname(const char* name, char* temp, char *desc)
-{
-  return NULL;
-}
-
-char* eth_getdesc_byname(char* name, char* temp)
-{
+const char* eth_getname_bydesc(const char* desc, char* name, char *ndesc) {
+	/* not found */
 	return NULL;
 }
 
-void eth_zero(ETH_DEV* dev)
-{
-  /* set all members to NULL OR 0 */
-  memset(dev, 0, sizeof(ETH_DEV));
-  dev->reflections = -1;                          /* not established yet */
+char* eth_getname_byname(const char* name, char* temp, char *desc) {
+	return NULL;
 }
 
-#undef USE_NETWORK
-#undef USE_SHARED
+char* eth_getdesc_byname(char* name, char* temp) {
+	return NULL;
+}
 
-const char *eth_capabilities(void)
-    {return "no Ethernet";}
-t_stat eth_open(ETH_DEV* dev, const char* name, DEVICE* dptr, uint32 dbit)
-  {return SCPE_NOFNC;}
-t_stat eth_close (ETH_DEV* dev)
-  {return SCPE_NOFNC;}
-t_stat eth_attach_help(FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, const char *cptr)
-  {
-  fprintf (st, "%s attach help\n\n", dptr->name);
-  fprintf (st, "This simulator was not built with ethernet device support\n");
-  return SCPE_OK;
-  }
-t_stat eth_check_address_conflict (ETH_DEV* dev, 
-                                   ETH_MAC* const mac)
-  {return SCPE_NOFNC;}
-t_stat eth_set_throttle (ETH_DEV* dev, uint32 time, uint32 burst, uint32 delay)
-  {return SCPE_NOFNC;}
-t_stat eth_set_async (ETH_DEV *dev, int latency)
-  {return SCPE_NOFNC;}
-t_stat eth_clr_async (ETH_DEV *dev)
-  {return SCPE_NOFNC;}
-t_stat eth_write (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine)
-  {return SCPE_NOFNC;}
-int eth_read (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine)
-  {return SCPE_NOFNC;}
-t_stat eth_filter (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses,
-                   ETH_BOOL all_multicast, ETH_BOOL promiscuous)
-  {return SCPE_NOFNC;}
-t_stat eth_filter_hash (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses,
-                   ETH_BOOL all_multicast, ETH_BOOL promiscuous, ETH_MULTIHASH* const hash)
-  {return SCPE_NOFNC;}
-int _eth_devices (int max, ETH_LIST* dev)
-  {return -1;}
-const char *eth_version (void)
-  {return NULL;}
-void eth_show_dev (FILE* st, ETH_DEV* dev)
-  {}
-t_stat sim_ether_test (DEVICE *dptr)
-  {return SCPE_OK;}
+void eth_zero(ETH_DEV* dev) {
+	/* set all members to NULL OR 0 */
+	memset(dev, 0, sizeof(ETH_DEV));
+	dev->reflections = -1;                          /* not established yet */
+}
+
+const char *eth_capabilities(void) {
+    return "wifi: WiFi STA";
+}
+
+t_stat eth_open(ETH_DEV* dev, const char* name, DEVICE* dptr, uint32 dbit) {
+	printf("eth_open: %s\n", name);
+	wifi_if_open();
+	return SCPE_OK;
+}
+
+t_stat eth_close (ETH_DEV* dev) {
+	printf("eth_close\n");
+	wifi_if_close();
+	return SCPE_NOFNC;
+}
+t_stat eth_attach_help(FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, const char *cptr) {
+	fprintf (st, "%s attach help\n\n", dptr->name);
+	fprintf (st, "%s attach wifi: attach wifi\n", dptr->name);
+	return SCPE_OK;
+}
+
+t_stat eth_check_address_conflict(ETH_DEV* dev, ETH_MAC* const mac) {
+	printf("eth_check_address_conflict\n");
+	return SCPE_OK;
+}
+
+t_stat eth_set_throttle (ETH_DEV* dev, uint32 time, uint32 burst, uint32 delay) {
+	return SCPE_OK;
+}
+
+t_stat eth_set_async (ETH_DEV *dev, int latency) {
+	printf("eth_set_async\n");
+	return SCPE_OK;
+}
+t_stat eth_clr_async (ETH_DEV *dev) {
+	printf("eth_clr_async\n");
+	return SCPE_OK;
+}
+
+/*
+Packet format:
+00000000  ff ff ff ff ff ff 22 33  44 55 66 77 08 06 00 01  |......"3DUfw....|
+00000010  08 00 06 04 00 01 22 33  44 55 66 77 c0 a8 01 01  |......"3DUfw....|
+00000020  00 00 00 00 00 00 c0 a8  01 02 00 00 00 00 00 00  |................|
+00000030  00 00 00 00 00 00 00 00  00 00 00 00              |............|
+0000003c
+- 6b dest mac
+- 6b source mac
+- 2b EtherType (0x0806=ARP)
+- Payload
+- CRC?
+*/
+
+t_stat eth_write (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine) {
+//	printf("eth_write\n");
+	wifi_if_write(packet->msg, packet->len);
+	if (routine) routine(SCPE_OK);
+	return SCPE_OK;
+}
+
+int eth_read (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine) {
+//	printf("eth_read\n");
+	int r=wifi_if_read(packet->msg, ETH_FRAME_SIZE);
+	if (r>0) {
+		packet->len=r;
+		if (routine) routine(SCPE_OK);
+		return SCPE_OK;
+	} else {
+		return SCPE_OK;
+	}
+}
+
+t_stat eth_filter (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses, ETH_BOOL all_multicast, ETH_BOOL promiscuous) {
+	printf("eth_filter\n");
+	return SCPE_OK;
+}
+
+t_stat eth_filter_hash (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses, ETH_BOOL all_multicast, ETH_BOOL promiscuous, ETH_MULTIHASH* const hash) {
+	printf("eth_filter_hash\n");
+	return SCPE_OK;
+}
+int _eth_devices (int max, ETH_LIST* dev) {
+	printf("_eth_devices\n");
+	return -1;
+}
+const char *eth_version (void) {
+	return NULL;
+}
+void eth_show_dev (FILE* st, ETH_DEV* dev) {
+}
+
+t_stat sim_ether_test (DEVICE *dptr) {
+	return SCPE_OK;
+}
 
 void ethq_remove(ETH_QUE* que) {
-  struct eth_item* item = &que->item[que->head];
+	struct eth_item* item = &que->item[que->head];
 
-  if (que->count) {
-    if (item->packet.oversize)
-      free (item->packet.oversize);
-    memset(item, 0, sizeof(struct eth_item));
-    if (++que->head == que->max)
-      que->head = 0;
-    que->count--;
-  }
+	if (que->count) {
+ 		if (item->packet.oversize)
+			free (item->packet.oversize);
+		memset(item, 0, sizeof(struct eth_item));
+		if (++que->head == que->max)
+			que->head = 0;
+		que->count--;
+  	}
 }
 
-void ethq_insert_data(ETH_QUE* que, int32 type, const uint8 *data, int used, size_t len, size_t crc_len, const uint8 *crc_data, int32 status)
-{
-  struct eth_item* item;
+void ethq_insert_data(ETH_QUE* que, int32 type, const uint8 *data, int used, size_t len, size_t crc_len, const uint8 *crc_data, int32 status) {
+	struct eth_item* item;
 
-  /* if queue empty, set pointers to beginning */
-  if (!que->count) {
-    que->head = 0;
-    que->tail = -1;
-  }
+	/* if queue empty, set pointers to beginning */
+	if (!que->count) {
+		que->head = 0;
+		que->tail = -1;
+	}
 
-  /* find new tail of the circular queue */
-  if (++que->tail == que->max)
-    que->tail = 0;
-  if (++que->count > que->max) {
-    que->count = que->max;
-    /* lose oldest packet */
-    if (++que->head == que->max)
-      que->head = 0;
-    que->loss++;
-    }
-  if (que->count > que->high)
-    que->high = que->count;
+	/* find new tail of the circular queue */
+	if (++que->tail == que->max)
+		que->tail = 0;
+	if (++que->count > que->max) {
+		que->count = que->max;
+		/* lose oldest packet */
+		if (++que->head == que->max) que->head = 0;
+		que->loss++;
+	}
+	if (que->count > que->high)
+		que->high = que->count;
 
-  /* set information in (new) tail item */
-  item = &que->item[que->tail];
-  item->type = type;
-  item->packet.len = len;
-  item->packet.used = used;
-  item->packet.crc_len = crc_len;
-  if (MAX (len, crc_len) <= sizeof (item->packet.msg)) {
-    memcpy(item->packet.msg, data, ((len > crc_len) ? len : crc_len));
-    if (crc_data && (crc_len > len))
-      memcpy(&item->packet.msg[len], crc_data, ETH_CRC_SIZE);
-    }
-  else {
-    item->packet.oversize = (uint8 *)realloc (item->packet.oversize, ((len > crc_len) ? len : crc_len));
-    memcpy(item->packet.oversize, data, ((len > crc_len) ? len : crc_len));
-    if (crc_data && (crc_len > len))
-      memcpy(&item->packet.oversize[len], crc_data, ETH_CRC_SIZE);
-    }
-  item->packet.status = status;
+	/* set information in (new) tail item */
+	item = &que->item[que->tail];
+	item->type = type;
+	item->packet.len = len;
+	item->packet.used = used;
+	item->packet.crc_len = crc_len;
+	if (MAX (len, crc_len) <= sizeof (item->packet.msg)) {
+		memcpy(item->packet.msg, data, ((len > crc_len) ? len : crc_len));
+		if (crc_data && (crc_len > len)) memcpy(&item->packet.msg[len], crc_data, ETH_CRC_SIZE);
+	} else {
+		item->packet.oversize = (uint8 *)realloc (item->packet.oversize, ((len > crc_len) ? len : crc_len));
+		memcpy(item->packet.oversize, data, ((len > crc_len) ? len : crc_len));
+		if (crc_data && (crc_len > len)) memcpy(&item->packet.oversize[len], crc_data, ETH_CRC_SIZE);
+	}
+	item->packet.status = status;
 }
 
-void ethq_insert(ETH_QUE* que, int32 type, ETH_PACK* pack, int32 status)
-{
-ethq_insert_data(que, type, pack->oversize ? pack->oversize : pack->msg, pack->used, pack->len, pack->crc_len, NULL, status);
+void ethq_insert(ETH_QUE* que, int32 type, ETH_PACK* pack, int32 status) {
+	ethq_insert_data(que, type, pack->oversize ? pack->oversize : pack->msg, pack->used, pack->len, pack->crc_len, NULL, status);
 }
 
-t_stat ethq_init(ETH_QUE* que, int max)
-{
-  /* create dynamic queue if it does not exist */
-  if (!que->item) {
-    que->item = (struct eth_item *) calloc(max, sizeof(struct eth_item));
-    if (!que->item) {
-      /* failed to allocate memory */
-      sim_printf("EthQ: failed to allocate dynamic queue[%d]\n", max);
-      return SCPE_MEM;
-    };
-    que->max = max;
-  };
-  ethq_clear(que);
-  return SCPE_OK;
+t_stat ethq_init(ETH_QUE* que, int max) {
+	/* create dynamic queue if it does not exist */
+	if (!que->item) {
+		que->item = (struct eth_item *) calloc(max, sizeof(struct eth_item));
+		if (!que->item) {
+			/* failed to allocate memory */
+			sim_printf("EthQ: failed to allocate dynamic queue[%d]\n", max);
+			return SCPE_MEM;
+		}
+		que->max = max;
+	}
+	ethq_clear(que);
+	return SCPE_OK;
 }
 
-t_stat ethq_destroy(ETH_QUE* que)
-{
-  /* release dynamic queue if it exists */
-  ethq_clear(que);
-  que->max = 0;
-  if (que->item) {
-    free(que->item);
-    que->item = NULL;
-  };
-  return SCPE_OK;
+t_stat ethq_destroy(ETH_QUE* que) {
+	/* release dynamic queue if it exists */
+	ethq_clear(que);
+	que->max = 0;
+	if (que->item) {
+		free(que->item);
+		que->item = NULL;
+	};
+	return SCPE_OK;
 }
 
-void ethq_clear(ETH_QUE* que)
-{
-  int i;
+void ethq_clear(ETH_QUE* que) {
+	int i;
 
-  /* free up any extended packets */
-  for (i=0; i<que->max; ++i)
-    if (que->item[i].packet.oversize) {
-      free (que->item[i].packet.oversize);
-      que->item[i].packet.oversize = NULL;
-      }
-  /* clear packet array */
-  memset(que->item, 0, sizeof(struct eth_item) * que->max);
-  /* clear rest of structure */
-  que->count = que->head = que->tail = 0;
+	/* free up any extended packets */
+	for (i=0; i<que->max; ++i)
+	if (que->item[i].packet.oversize) {
+		free (que->item[i].packet.oversize);
+		que->item[i].packet.oversize = NULL;
+	}
+	/* clear packet array */
+	memset(que->item, 0, sizeof(struct eth_item) * que->max);
+	/* clear rest of structure */
+	que->count = que->head = que->tail = 0;
 }
 
 t_stat eth_show (FILE* st, UNIT* uptr, int32 val, CONST void* desc){

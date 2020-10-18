@@ -1,3 +1,5 @@
+//Note: This is entirely stubbed.
+
 /* sim_sock.c: OS-dependent socket routines
 
    Copyright (c) 2001-2010, Robert M Supnik

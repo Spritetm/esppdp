@@ -24,7 +24,7 @@
 #include "driver/spi_common.h"
 #include "sdmmc_cmd.h"
 #include "sdkconfig.h"
-
+#include "wifi_if.h"
 
 #define TAG "main"
 
@@ -32,8 +32,11 @@ int main(int argc, char **argv);
 
 #include "esp_heap_trace.h"
 
+
+#if CONFIG_HEAP_TRACING_STANDALONE
 #define NUM_RECORDS 100
 static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
+#endif
 
 void app_main(void) {
     esp_err_t ret;
