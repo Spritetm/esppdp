@@ -56,8 +56,8 @@ t_stat sim_poll_kbd (void) {
 	if (c!=-1) return c|SCPE_KFLAG;
 	if (esp_timer_get_time()>autoboot_next_evt) {
 		autoboot_next_evt=esp_timer_get_time()+(1000UL*1000*5);
-		if (last_char==':') return '\n'|SCPE_KFLAG;
-		if (last_char=='#') return 0x4|SCPE_KFLAG;
+//		if (last_char==':') return '\n'|SCPE_KFLAG;
+//		if (last_char=='#') return 0x4|SCPE_KFLAG;
 	}
 
 #endif
@@ -161,6 +161,7 @@ t_stat sim_ttinit (void) {
 	term.c_lflag &= ~ICANON;
 	tcsetattr(0, TCSANOW, &term);
 	setbuf(stdin, NULL);
+#else
 	autoboot_next_evt=0;
 #endif
 	return SCPE_OK;

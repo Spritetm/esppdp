@@ -25,9 +25,10 @@ hci_handle hci_open()
         printf("Bluetooth Controller initialize failed: %s", esp_err_to_name(ret));
         return NULL;
     }
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+	//Note: the mode is dependent on what's enabled in menuconfig; will fail if they differ
+    ret = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT); //ESP_BT_MODE_BTDM
     if (ret != ESP_OK) {
-        printf("Bluetooth Controller initialize failed: %s", esp_err_to_name(ret));
+        printf("Bluetooth Controller enable failed: %s", esp_err_to_name(ret));
         return NULL;
     }
 

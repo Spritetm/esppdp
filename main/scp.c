@@ -902,9 +902,11 @@ int main (int argc, char *argv[]) {
 	
 	//Set up network device
 	DEVICE *dev=find_dev("XQ");
+	//dev->dctrl=0xfffffffff //enable for debugging info
 	char mac[32];
 	wifi_if_get_mac(mac);
 	set_mod(dev, dev->units, "MAC", mac, NULL);
+	set_mod(dev, dev->units, "TYPE", mac, "DEQNA");
 	dev->attach(dev->units, "WIFI");
 
 	//find rq device, boot off it

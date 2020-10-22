@@ -584,6 +584,13 @@ const char *eth_capabilities(void) {
 
 t_stat eth_open(ETH_DEV* dev, const char* name, DEVICE* dptr, uint32 dbit) {
 	printf("eth_open: %s\n", name);
+	eth_zero(dev);
+	const char *savname="wifi";
+	dev->name = (char *)malloc(strlen(savname)+1);
+	strcpy(dev->name, savname);
+	dev->dptr = dptr;
+	dev->dbit = dbit;
+
 	wifi_if_open();
 	return SCPE_OK;
 }
@@ -631,22 +638,46 @@ Packet format:
 - CRC?
 */
 
+//returns SCPE_OK on success, 1 on fail
+//calls routine with 0 on success
 t_stat eth_write (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine) {
+
+	if ((packet->len >= ETH_MIN_PACKET) && (packet->len <= ETH_MAX_PACKET)) {
+		int loopback_self_frame = LOOPBACK_SELF_FRAME(packet->msg, packet->msg);
+		int loopback_physical_response = LOOPBACK_PHYSICAL_RESPONSE(dev, packet->msg);
+		if (loopback_self_frame || loopback_physical_response) {
+			printf("EEEEK! Loopback frame.\n");
+			exit(0);
+		}
+	}
+
 //	printf("eth_write\n");
 	wifi_if_write(packet->msg, packet->len);
-	if (routine) routine(SCPE_OK);
+	++dev->packets_sent;
+	
+	if (routine) routine(0);
 	return SCPE_OK;
 }
 
+//returns 1 when successful read, 0 otherwise
+//calls routine with arg 0 when successful
 int eth_read (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine) {
 //	printf("eth_read\n");
+	dev->read_packet=packet;
+	dev->read_callback=routine;
 	int r=wifi_if_read(packet->msg, ETH_FRAME_SIZE);
 	if (r>0) {
+		//Packets smaller than Ethernet allows will get padded to minimum size (otherwise they'd be
+		//detected as runt packets)
+		if (r<ETH_MIN_PACKET) {
+			memset(((uint8_t*)packet->msg)+r, 0, (ETH_MIN_PACKET-r));
+			r=ETH_MIN_PACKET;
+		}
 		packet->len=r;
-		if (routine) routine(SCPE_OK);
-		return SCPE_OK;
+		if (routine) routine(0);
+		return 1;
 	} else {
-		return SCPE_OK;
+		return 0;
 	}
 }
 
