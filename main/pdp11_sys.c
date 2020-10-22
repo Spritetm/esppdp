@@ -122,7 +122,7 @@ extern DEVICE ch_dev;
 extern DEVICE ng_dev;
 extern DEVICE daz_dev;
 #endif
-extern REG cpu_reg[];
+extern const REG cpu_reg[];
 extern int32 saved_PC;
 
 /* SCP data structures and interface routines
@@ -141,7 +141,7 @@ char sim_name[] = "PDP-11";
 char sim_name[] = "UC-15";
 #endif
 
-REG *sim_PC = &cpu_reg[0];
+const REG *sim_PC = &cpu_reg[0];
 
 int32 sim_emax = 4;
 

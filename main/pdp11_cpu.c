@@ -307,7 +307,7 @@ uint32 cpu_type = 1u << INIMODEL;                       /* model as bit mask */
 uint32 cpu_opt = INIOPTNS;                              /* CPU options */
 uint16 pcq[PCQ_SIZE] = { 0 };                           /* PC queue */
 int32 pcq_p = 0;                                        /* PC queue ptr */
-REG *pcq_r = NULL;                                      /* PC queue reg ptr */
+const REG *pcq_r = NULL;                                      /* PC queue reg ptr */
 jmp_buf save_env;                                       /* abort handler */
 int32 hst_p = 0;                                        /* history pointer */
 int32 hst_lnt = 0;                                      /* history length */
@@ -421,7 +421,7 @@ BITFIELD psw_bits[] = {
     ENDBITS
 };
 
-REG cpu_reg[] = {
+const REG cpu_reg[] = {
     { ORDATAD (PC, saved_PC, 16,            "Program Counter") },
     { ORDATAD (R0, REGFILE[0][0], 16,       "General Purpose R0") },
     { ORDATAD (R1, REGFILE[1][0], 16,       "General Purpose R1") },
@@ -828,7 +828,7 @@ while (reason == 0)  {
             REGFILE[i][rs] = R[i];
         STACKFILE[cm] = SP;
         saved_PC = PC & 0177777;
-        pcq_r->qptr = pcq_p;                            /* update pc q ptr */
+//        pcq_r->qptr = pcq_p;                            /* update pc q ptr */
         set_r_display (rs, cm);
 
         reason = sim_process_event ();                  /* process events */
@@ -2418,7 +2418,7 @@ for (i = 0; i < 6; i++)
     REGFILE[i][rs] = R[i];
 STACKFILE[cm] = SP;
 saved_PC = PC & 0177777;
-pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
+//pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 set_r_display (rs, cm);
 return reason;
 }
@@ -3386,9 +3386,9 @@ if (M == NULL) {                    /* First time init */
     sim_clock_precalibrate_commands = pdp11_clock_precalibrate_commands;
     auto_config(NULL, 0);           /* do an initial auto configure */
     }
-pcq_r = find_reg ("PCQ", NULL, dptr);
-if (pcq_r)
-    pcq_r->qptr = 0;
+//pcq_r = find_reg ("PCQ", NULL, dptr);
+//if (pcq_r)
+//    pcq_r->qptr = 0;
 else
     return SCPE_IERR;
 set_r_display (0, MD_KER);
@@ -3508,15 +3508,15 @@ return iopageW ((int32) val, addr, WRITEC);
 
 void set_r_display (int32 rs, int32 cm)
 {
-REG *rptr;
+const REG *rptr;
 int32 i;
 
 rptr = find_reg ("R0", NULL, &cpu_dev);
 if (rptr == NULL)
     return;
-for (i = 0; i < 6; i++, rptr++)
-    rptr->loc = (void *) &REGFILE[i][rs];
-rptr->loc = (void *) &STACKFILE[cm];
+//for (i = 0; i < 6; i++, rptr++)
+//    rptr->loc = (void *) &REGFILE[i][rs];
+//rptr->loc = (void *) &STACKFILE[cm];
 return;
 }
 

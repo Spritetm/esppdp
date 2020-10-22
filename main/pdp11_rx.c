@@ -153,7 +153,7 @@ UNIT rx_unit[] = {
              UNIT_FIX+UNIT_ATTABLE+UNIT_BUFABLE+UNIT_MUSTBUF, RX_SIZE) }
     };
 
-REG rx_reg[] = {
+const REG rx_reg[] = {
     { ORDATA (RXCS, rx_csr, 16) },
     { ORDATA (RXDB, rx_dbr, 8) },
     { ORDATA (RXES, rx_esr, 8) },

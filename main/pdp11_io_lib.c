@@ -813,7 +813,7 @@ static void build_vector_tab (void)
 {
 int32 ilvl, ibit;
 static t_bool done = FALSE;
-AUTO_CON *autp;
+const AUTO_CON *autp;
 DEVICE *dptr;
 DIB *dibp;
 uint32 j, k;

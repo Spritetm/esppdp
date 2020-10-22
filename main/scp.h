@@ -99,7 +99,7 @@ t_stat fprint_val (FILE *stream, t_value val, uint32 radix, uint32 width, uint32
 #define Fgetc(x) fgetc(x)
 
 t_stat sim_process_event (void);
-REG *find_reg (CONST char *ptr, CONST char **optr, DEVICE *dptr);
+const REG *find_reg (CONST char *ptr, CONST char **optr, DEVICE *dptr);
 t_stat reset_all (uint32 start);
 t_stat reset_all_p (uint32 start);
 t_stat get_aval (t_addr addr, DEVICE *dptr, UNIT *uptr);
@@ -356,12 +356,12 @@ DEVICE *find_unit (const char *ptr, UNIT **uptr);
 DEVICE *find_dev_from_unit (UNIT *uptr);
 t_stat sim_register_internal_device (DEVICE *dptr);
 void sim_sub_args (char *in_str, size_t in_str_size, char *do_arg[]);
-REG *find_reg (CONST char *ptr, CONST char **optr, DEVICE *dptr);
+const REG *find_reg (CONST char *ptr, CONST char **optr, DEVICE *dptr);
 CTAB *find_ctab (CTAB *tab, const char *gbuf);
 C1TAB *find_c1tab (C1TAB *tab, const char *gbuf);
 SHTAB *find_shtab (SHTAB *tab, const char *gbuf);
 t_stat get_aval (t_addr addr, DEVICE *dptr, UNIT *uptr);
-t_value get_rval (REG *rptr, uint32 idx);
+t_value get_rval (const REG *rptr, uint32 idx);
 BRKTAB *sim_brk_fnd (t_addr loc);
 uint32 sim_brk_test (t_addr bloc, uint32 btyp);
 void sim_brk_clrspc (uint32 spc, uint32 btyp);
@@ -397,7 +397,7 @@ t_stat sim_messagef (t_stat stat, const char *fmt, ...) GCC_FMT_ATTR(2, 3);
 void sim_data_trace(DEVICE *dptr, UNIT *uptr, const uint8 *data, const char *position, size_t len, const char *txt, uint32 reason);
 void sim_flush_buffered_files (void);
 
-void fprint_stopped_gen (FILE *st, t_stat v, REG *pc, DEVICE *dptr);
+void fprint_stopped_gen (FILE *st, t_stat v, const REG *pc, DEVICE *dptr);
 #define SCP_HELP_FLAT   (1u << 31)       /* Force flat help when prompting is not possible */
 #define SCP_HELP_ONECMD (1u << 30)       /* Display one topic, do not prompt */
 #define SCP_HELP_ATTACH (1u << 29)       /* Top level topic is ATTACH help */
@@ -469,7 +469,7 @@ extern char sim_name[64];
 extern const char *sim_vm_release;
 extern const char *sim_vm_release_message;
 extern DEVICE *sim_devices[];
-extern REG *sim_PC;
+extern const REG *sim_PC;
 extern const char *sim_stop_messages[SCPE_BASE];
 extern t_stat sim_instr (void);
 extern t_stat sim_load (FILE *ptr, CONST char *cptr, CONST char *fnam, int flag);

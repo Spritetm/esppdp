@@ -207,7 +207,7 @@ DIB mba0_dib = {
 
 UNIT mba0_unit = { UDATA (NULL, 0, 0) };
 
-REG mba0_reg[] = {
+const REG mba0_reg[] = {
     { ORDATA (CS1, massbus[0].cs1, 16) },
     { ORDATA (WC, massbus[0].wc, 16) },
     { ORDATA (BA, massbus[0].ba, 16) },
@@ -240,7 +240,7 @@ DIB mba1_dib = {
 
 UNIT mba1_unit = { UDATA (NULL, 0, 0) };
 
-REG mba1_reg[] = {
+const REG mba1_reg[] = {
     { ORDATA (CS1, massbus[1].cs1, 16) },
     { ORDATA (WC, massbus[1].wc, 16) },
     { ORDATA (BA, massbus[1].ba, 16) },
@@ -273,7 +273,7 @@ DIB mba2_dib = {
 
 UNIT mba2_unit = { UDATA (NULL, 0, 0) };
 
-REG mba2_reg[] = {
+const REG mba2_reg[] = {
     { ORDATA (CS1, massbus[2].cs1, 16) },
     { ORDATA (WC, massbus[2].wc, 16) },
     { ORDATA (BA, massbus[2].ba, 16) },

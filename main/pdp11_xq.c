@@ -371,7 +371,7 @@ BITFIELD xq_srr_bits[] = {
   ENDBITS
 };
 
-REG xqa_reg[] = {
+const REG xqa_reg[] = {
   { GRDATA ( SA0,  xqa.mac[0], XQ_RDX, 8, 0), REG_RO|REG_FIT},
   { GRDATA ( SA1,  xqa.mac[1], XQ_RDX, 8, 0), REG_RO|REG_FIT},
   { GRDATA ( SA2,  xqa.mac[2], XQ_RDX, 8, 0), REG_RO|REG_FIT},
@@ -435,7 +435,7 @@ UNIT xqb_unit[] = {
  { UDATA (&xq_srqrsvc, UNIT_DIS, 0) },
 };
 
-REG xqb_reg[] = {
+const REG xqb_reg[] = {
   { GRDATA ( SA0,  xqb.mac[0], XQ_RDX, 8, 0), REG_RO|REG_FIT},
   { GRDATA ( SA1,  xqb.mac[1], XQ_RDX, 8, 0), REG_RO|REG_FIT},
   { GRDATA ( SA2,  xqb.mac[2], XQ_RDX, 8, 0), REG_RO|REG_FIT},

@@ -1393,7 +1393,7 @@ pthread_mutex_unlock (&sim_timer_lock);
 return SCPE_OK;
 }
 
-REG sim_timer_reg[] = {
+const REG sim_timer_reg[] = {
     { DRDATAD (IDLE_CYC_MS,      sim_idle_cyc_ms,        32, "Cycles Per Millisecond"), PV_RSPC|REG_RO},
     { DRDATAD (IDLE_CYC_SLEEP,   sim_idle_cyc_sleep,     32, "Cycles Per Minimum Sleep"), PV_RSPC|REG_RO},
     { DRDATAD (IDLE_STABLE,      sim_idle_stable,        32, "IDLE stability delay"), PV_RSPC},
@@ -1419,7 +1419,7 @@ REG sim_timer_reg[] = {
     { NULL }
     };
 
-REG sim_throttle_reg[] = {
+const REG sim_throttle_reg[] = {
     { DRDATAD (THROT_MS_START,   sim_throt_ms_start,     32, "Throttle measurement start time"), PV_RSPC|REG_RO},
     { DRDATAD (THROT_MS_STOP,    sim_throt_ms_stop,      32, "Throttle measurement stop time"), PV_RSPC|REG_RO},
     { DRDATAD (THROT_TYPE,       sim_throt_type,         32, "Throttle type"), PV_RSPC|REG_RO},

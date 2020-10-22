@@ -115,7 +115,7 @@ DIB tti_dib = {
 
 UNIT tti_unit = { UDATA (&tti_svc, UNIT_IDLE|TT_MODE_7P, 0), TMLN_SPD_9600_BPS };
 
-REG tti_reg[] = {
+const REG tti_reg[] = {
     { HRDATAD (BUF,       tti_unit.buf,          8, "last data item processed") },
     { HRDATAD (CSR,            tti_csr,         16, "control/status register") },
     { FLDATAD (INT,         IREQ (TTI),  INT_V_TTI, "interrupt pending flag") },
@@ -181,7 +181,7 @@ DIB tto_dib = {
 
 UNIT tto_unit = { UDATA (&tto_svc, TT_MODE_7P, 0), SERIAL_OUT_WAIT };
 
-REG tto_reg[] = {
+const REG tto_reg[] = {
     { ORDATA (BUF, tto_unit.buf, 8) },
     { ORDATA (CSR, tto_csr, 16) },
     { FLDATA (INT, IREQ (TTO), INT_V_TTO) },
@@ -242,7 +242,7 @@ BITFIELD clk_bits[] = {
     ENDBITS
 };
 
-REG clk_reg[] = {
+const REG clk_reg[] = {
     { ORDATADF (CSR, clk_csr, 16, "Control Status Register", clk_bits) },
     { FLDATAD (INT, IREQ (CLK), INT_V_CLK, "Processor Interrupt Pending") },
     { FLDATAD (DONE, clk_csr, CSR_V_DONE, "Tick Interval Complete") },

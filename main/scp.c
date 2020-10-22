@@ -323,9 +323,9 @@ DEVICE *find_dev_from_unit (UNIT *uptr) {
         *optr   =       pointer to next character in input string
 */
 
-REG *find_reg (CONST char *cptr, CONST char **optr, DEVICE *dptr) {
+const REG *find_reg (CONST char *cptr, CONST char **optr, DEVICE *dptr) {
 	CONST char *tptr;
-	REG *rptr;
+	const REG *rptr;
 	size_t slnt;
 
 	if ((cptr == NULL) || (dptr == NULL) || (dptr->registers == NULL)) return NULL;

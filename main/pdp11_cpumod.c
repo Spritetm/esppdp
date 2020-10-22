@@ -262,7 +262,7 @@ static const char *jcsr_val[4] = {
 
 UNIT sys_unit = { UDATA (NULL, 0, 0) };
 
-REG sys_reg[] = {
+const REG sys_reg[] = {
     { ORDATA (SR, SR, 16) },
     { ORDATA (DR, DR, 16) },
     { ORDATA (MEMERR, MEMERR, 16) },

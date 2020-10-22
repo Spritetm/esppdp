@@ -617,7 +617,7 @@ UNIT rp_unit[] = {
              UNIT_ROABLE+(INIT_DTYPE << UNIT_V_DTYPE), INIT_SIZE) }
     };
 
-REG rp_reg[] = {
+const REG rp_reg[] = {
     { BRDATADF (CS1,              rpcs1, DEV_RDX, 16, RP_NUMDR, "current operation", rp_cs1_bits) },
     { BRDATADF (DA,                rpda, DEV_RDX, 16, RP_NUMDR, "desired surface, sector", rp_da_bits) },
     { BRDATADF (DS,                rpds, DEV_RDX, 16, RP_NUMDR, "drive status", rp_ds_bits) },

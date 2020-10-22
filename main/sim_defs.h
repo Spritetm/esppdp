@@ -483,7 +483,7 @@ typedef t_stat (*ACTIVATE_API)(UNIT *unit, int32 interval);
 struct DEVICE {
     const char          *name;                          /* name */
     UNIT                *units;                         /* units */
-    REG                 *registers;                     /* registers */
+    const REG                 *registers;                     /* registers */
     MTAB                *modifiers;                     /* modifiers */
     uint32              numunits;                       /* #units */
     uint32              aradix;                         /* address radix */
@@ -674,22 +674,20 @@ struct BITFIELD {
     };
 
 /* Register data structure */
-
-//Note: Lots of reg fields are not needed in a static configuration, so they're commented out - JD
 struct REG {
     CONST char          *name;                          /* name */
     void                *loc;                           /* location */
-//    uint32              radix;                          /* radix */
-//    uint32              width;                          /* width */
-//    uint32              offset;                         /* starting bit */
-//    uint32              depth;                          /* save depth */
-//    const char          *desc;                          /* description */
-//    BITFIELD            *fields;                        /* bit fields */
+    uint32              radix;                          /* radix */
+    uint32              width;                          /* width */
+    uint32              offset;                         /* starting bit */
+    uint32              depth;                          /* save depth */
+    const char          *desc;                          /* description */
+    BITFIELD            *fields;                        /* bit fields */
     uint32              qptr;                           /* circ q ptr */
-//    size_t              str_size;                       /* structure size */
-//    size_t              obj_size;                       /* sizeof(*loc) */
-//    size_t              ele_size;                       /* sizeof(**loc) or sizeof(*loc) if depth == 1 */
-//    const char          *macro;                         /* Initializer Macro Name */
+    size_t              str_size;                       /* structure size */
+    size_t              obj_size;                       /* sizeof(*loc) */
+    size_t              ele_size;                       /* sizeof(**loc) or sizeof(*loc) if depth == 1 */
+    const char          *macro;                         /* Initializer Macro Name */
     /* NOTE: Flags MUST always be last since it is initialized outside of macro definitions */
     uint32              flags;                          /* flags */
     };

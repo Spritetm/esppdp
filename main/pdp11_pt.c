@@ -92,7 +92,7 @@ UNIT ptr_unit = {
     };
 
 extern DEVICE ptr_dev;
-REG ptr_reg[] = {
+const REG ptr_reg[] = {
     { GRDATAD (BUF,     ptr_unit.buf, DEV_RDX,  8, 0, "last data item processed") },
     { GRDATAD (CSR,          ptr_csr, DEV_RDX, 16, 0, "control/status register") },
     { FLDATAD (INT,       IREQ (PTR), INT_V_PTR,      "interrupt pending flag") },
@@ -145,7 +145,7 @@ UNIT ptp_unit = {
     UDATA (&ptp_svc, UNIT_SEQ+UNIT_ATTABLE, 0), SERIAL_OUT_WAIT
     };
 
-REG ptp_reg[] = {
+const REG ptp_reg[] = {
     { GRDATAD (BUF,     ptp_unit.buf, DEV_RDX,  8, 0, "last data item processed") },
     { GRDATAD (CSR,          ptp_csr, DEV_RDX, 16, 0, "control/status register") },
     { FLDATAD (INT,       IREQ (PTP), INT_V_PTP,      "interrupt pending flag") },
