@@ -780,6 +780,10 @@ class HIDSource {
         }
         return 0;
     }
+
+    int connected_num() {
+        return _devices.size();
+    }
 };
 
 
@@ -809,3 +813,9 @@ int hid_get(uint8_t* dst, int dst_len)
         return -1;
     return _hid_source->get(dst,dst_len);
 }
+
+int hid_connected_num() {
+    if (!_hid_source) return 0;
+    return _hid_source->connected_num();
+}
+

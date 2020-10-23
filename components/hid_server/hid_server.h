@@ -31,6 +31,7 @@ int hid_init(const char* local_name);
 int hid_update();
 int hid_close();
 int hid_get(uint8_t* dst, int dst_len); //
+int hid_connected_num();
 
 void gui_msg(const char* msg);                                  // temporarily display a msg
 
