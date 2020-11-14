@@ -22,7 +22,8 @@ int64_t autoboot_next_evt;
 uint32_t sim_int_char = 5;
 t_bool sim_signaled_int_char=FALSE;
 uint32 sim_last_poll_kbd_time=0;
-int32 sim_tt_pchar = 0x00002780;
+//int32 sim_tt_pchar = 0x00002780;
+int32 sim_tt_pchar = 0xffffffff; //pass on all chars
 
 char *read_line (char *cptr, int32 size, FILE *stream){
 	printf("unimp: read_line\n");

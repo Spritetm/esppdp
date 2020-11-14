@@ -842,6 +842,9 @@ t_stat set_mod(DEVICE *dev, UNIT *unit, const char *mod, const char *cp, void *d
 #define RX_FLOPPY_PATH "/spiffs/floppy.dsk"
 #endif
 
+//1 to run 2.11BSD
+#define RUN_BSD 1
+
 int main (int argc, char *argv[]) {
 	t_stat stat=SCPE_OK;
 	sim_deb=stderr;
@@ -883,7 +886,12 @@ int main (int argc, char *argv[]) {
 
 	//Set main memory capacity...
 	DEVICE *cpudev=find_dev("CPU");
+#if RUN_BSD
 	cpudev->units[0].capac=3.5*1024*1024;
+#else
+	//Assign less memory as the floppy needs to be read into memory entirely
+	cpudev->units[0].capac=512*1024;
+#endif
 
 	if ((stat = reset_all (0)) != SCPE_OK) {
 		fprintf (stderr, "Fatal simulator initialization error\n%s\n",
@@ -910,7 +918,7 @@ int main (int argc, char *argv[]) {
 	dev->attach(dev->units, "WIFI");
 
 	//find rq device, boot off it
-#if 1
+#if RUN_BSD
 	dev=find_dev("RQ");
 	set_mod(dev, dev->units, "RA92", NULL, NULL);
 	printf("Attach RA92 disk to RQ\n");
@@ -919,7 +927,7 @@ int main (int argc, char *argv[]) {
 	printf("Boot from RQ\n");
 #else
 	printf("Find RX\n");
-	DEVICE *dev=find_dev("RX");
+	dev=find_dev("RX");
 	printf("Attach disk to RX\n");
 	stat=attach_unit(dev->units, RX_FLOPPY_PATH);
 	if (stat!=SCPE_OK) printf("Attach failed...\n");
