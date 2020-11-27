@@ -81,6 +81,9 @@ DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
 	{0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
 	/* Sleep Out */
 	{0x11, {0}, 0x80},
+#if !DEVKIT
+	{0x21, {0}, 0x80},
+#endif
 	/* Display On */
 	{0x29, {0}, 0x80},
 	{0, {0}, 0xff}
@@ -223,7 +226,7 @@ static void lcd_init(spi_device_handle_t spi) {
 	vTaskDelay(100 / portTICK_RATE_MS);
 
 	//detect LCD type
-	uint32_t lcd_id = lcd_get_id(spi);
+	uint32_t lcd_id = 1;//lcd_get_id(spi);
 	int lcd_detected_type = 0;
 	int lcd_type;
 
@@ -258,7 +261,11 @@ static void lcd_init(spi_device_handle_t spi) {
 	}
 
 	///Enable backlight
+#if DEVKIT
 	gpio_set_level(PIN_NUM_BCKL, 0);
+#else
+	gpio_set_level(PIN_NUM_BCKL, 1);
+#endif
 }
 
 static inline int get_pix(int c, int x, int y) {

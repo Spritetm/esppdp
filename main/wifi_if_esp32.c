@@ -23,6 +23,7 @@
 #include "esp_wpa.h"
 #include "esp_log.h"
 #include "wifi_if_esp32_packet_filter.h"
+#include "wifid.h"
 
 /*
 As some things (notably DHCP) are handled by native code instead of by the PDP11, we need 
@@ -37,7 +38,7 @@ in the WiFi rx callback: we use a packet filter function to decide if the receiv
 should be forwarded to the PDP11, the LWIP stack, both, or neither.
 */
 
-#define MAX_RETRY 5
+#define MAX_RETRY 25
 #define TAG "wifi_if"
 
 //#define DBG_DUMP_PACKETS
@@ -69,7 +70,7 @@ static esp_err_t wifi_netif_tx_wrap(void *driver, void *buffer, size_t len, void
 	hexdump(buffer, len);
 #endif
 	esp_err_t ret=esp_wifi_internal_tx_by_ref(ESP_IF_WIFI_STA, buffer, len, netstack_buffer);
-	ESP_ERROR_CHECK(ret);
+	//Ignore any errors, wifi is lossy anyway.
 	return ret;
 }
 
@@ -81,10 +82,10 @@ int wifi_if_write(uint8_t *packet, int len) {
 		//filtered out as it's interpreted by the filter code itself
 		return len;
 	}
-#ifdef DBG_DUMP_PACKETS
+//#ifdef DBG_DUMP_PACKETS
 	printf("PDP11 TX:\n");
 	hexdump(packet, len);
-#endif
+//#endif
 	esp_wifi_internal_tx(ESP_IF_WIFI_STA, packet, len);
 	return len;
 }
@@ -108,10 +109,26 @@ static esp_err_t wlan_send_to_pdp(void *buffer, uint16_t len, void *eb, int do_c
 
 	int ret = xQueueSend(rxqueue, &p, 0);
 	if (ret != pdTRUE) {
+		if (!p.eb) free(p.buffer);
 		printf("WiFi: rx queue full...\n");
 	}
 	return ESP_OK;
 }
+
+void wifi_if_wifid_send_to_pdp(void *buffer, uint16_t len) {
+	printf("wifid resp pkt:\n");
+	hexdump(buffer, len);
+	//injects a malloc()'ed packet for wifid into the packet stream to the pdp11
+	rx_packet_t p={};
+	p.len=len;
+	p.buffer=buffer;
+	int ret = xQueueSend(rxqueue, &p, 0);
+	if (ret != pdTRUE) {
+		if (!p.eb) free(p.buffer);
+		printf("WiFi: wifid: rx queue full...\n");
+	}
+}
+
 
 //Gets called whenever the WiFi interface received something
 static esp_err_t wlan_sta_rx_callback(void *buffer, uint16_t len, void *eb) {
@@ -196,6 +213,11 @@ static void sta_event_handler(void* arg, esp_event_base_t event_base,
 //		ESP_ERROR_CHECK(esp_netif_dhcpc_start(netif));
 		s_retry_num = 0;
 		sta_connected = 1;
+	} else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+		ip_event_got_ip_t *ip=(ip_event_got_ip_t*)event_data;
+		wifid_signal_connected(ip->esp_netif, &ip->ip_info);
+	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
+		wifid_signal_scan_done();
 	}
 }
 
@@ -256,8 +278,10 @@ void wifi_if_open() {
 		ESP_LOGI(TAG,"Failed to start WiFi");
 		return;
 	}
-	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &sta_event_handler, NULL));
-	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &sta_event_handler, NULL));
+//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &sta_event_handler, NULL));
+//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &sta_event_handler, NULL));
+	ESP_ERROR_CHECK(esp_event_handler_register(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &sta_event_handler, NULL));
+//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &sta_event_handler, NULL));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 	ESP_LOGI(TAG,"STA mode set");
 

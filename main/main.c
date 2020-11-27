@@ -67,6 +67,7 @@ void app_main(void) {
 	sdmmc_card_t* card;
 
 	sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+	host.max_freq_khz=5000;
 	sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 	// GPIOs 15, 2, 4, 12, 13 should have external 10k pull-ups.
 	// Internal pull-ups are not sufficient. However, enabling internal pull-ups
