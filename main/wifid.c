@@ -103,21 +103,24 @@ void wifid_parse_packet(uint8_t *buffer, int len) {
 		}
 		//will generate WIFI_EVENT_SCAN_DONE event when done
 	} else if (wcmd->cmd == CMD_CONNECT) {
-		printf("WiFiD: Got CONNECT commmand\n");
-		wifi_config_t* wifi_cfg = (wifi_config_t *)calloc(1,sizeof(wifi_config_t));
-		strncpy((char*)wifi_cfg->sta.ssid, wcmd->connect.ssid, sizeof(wifi_cfg->sta.ssid));
-		strncpy((char*)wifi_cfg->sta.password, wcmd->connect.pass, sizeof(wifi_cfg->sta.password));
-		wifi_cfg->sta.pmf_cfg.capable = true;
-		wifi_cfg->sta.pmf_cfg.required = false;
-		esp_err_t r=esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_cfg);
+		printf("WiFiD: Got CONNECT commmand: SSID `%s` pass `%s`\n", wcmd->connect.ssid, wcmd->connect.pass);
+		wifi_config_t wifi_cfg = {};
+		strncpy((char*)wifi_cfg.sta.ssid, wcmd->connect.ssid, sizeof(wifi_cfg.sta.ssid));
+		strncpy((char*)wifi_cfg.sta.password, wcmd->connect.pass, sizeof(wifi_cfg.sta.password));
+		wifi_cfg.sta.pmf_cfg.capable = true;
+		wifi_cfg.sta.pmf_cfg.required = false;
+		esp_err_t r=esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg);
 		if (r==ESP_OK) {
+			wifi_if_ena_auto_reconnect(0);
+			esp_wifi_disconnect();
+			vTaskDelay(1000/portTICK_PERIOD_MS); //hacky, should perhaps use a callback from the disconnect event?
+			printf("connect\n");
+			wifi_if_ena_auto_reconnect(1);
 			r=esp_wifi_connect();
 		}
 		if (r!=ESP_OK) {
 			send_error_msg(esp_err_to_name(r));
 		}
-		ESP_ERROR_CHECK(esp_wifi_connect());
-		free(wifi_cfg);
 		//will generate IP_EVENT_STA_GOT_IP when done
 	} else if (wcmd->cmd == CMD_QUIT) {
 		//Ignore, we aren't the one needing to quit here.

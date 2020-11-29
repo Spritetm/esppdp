@@ -231,7 +231,7 @@
 #include "pdp11_defs.h"
 #include "pdp11_cpumod.h"
 #include "sim_term.h"
-
+#include "esp_attr.h"
 
 #define PCQ_SIZE        64                              /* must be 2**n */
 #define PCQ_MASK        (PCQ_SIZE - 1)
@@ -698,7 +698,7 @@ t_value pdp11_pc_value (void)
 return (t_value)PC;
 }
 
-t_stat sim_instr (void)
+t_stat IRAM_ATTR sim_instr (void)
 {
 int abortval, i;
 volatile int32 trapea;                                  /* used by setjmp */

@@ -40,6 +40,7 @@ should be forwarded to the PDP11, the LWIP stack, both, or neither.
 
 #define MAX_RETRY 25
 #define TAG "wifi_if"
+#define PDP11_IN_FLIGHT_PACKETS 32
 
 //#define DBG_DUMP_PACKETS
 
@@ -196,30 +197,42 @@ int sta_connected=0;
 static void sta_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data) {
 	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-		esp_netif_action_disconnected(netif, 0, 0, 0);
 //		esp_netif_dhcpc_stop(netif);
 		if (s_retry_num < MAX_RETRY) {
-			esp_wifi_connect();
 			s_retry_num++;
-			ESP_LOGI(TAG, "retry to connect to the AP");
+			ESP_LOGI(TAG, "Disconnected from AP, retrying...");
+			esp_wifi_connect();
 		} else {
-			ESP_LOGI(TAG,"sta disconncted");
+			ESP_LOGI(TAG, "Disconnected from AP, not retrying.");
 			sta_connected = 0;
-			esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA,NULL);
+//			esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, NULL);
 		}
+		esp_netif_action_disconnected(netif, event_base, event_id, event_data);
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) {
 		ESP_LOGI(TAG,"connected to AP");
-		esp_netif_action_connected(netif, 0, 0, 0);
-//		ESP_ERROR_CHECK(esp_netif_dhcpc_start(netif));
-		s_retry_num = 0;
-		sta_connected = 1;
+//		esp_netif_dhcpc_start(netif);
+		esp_netif_action_connected(netif, event_base, event_id, event_data);
+//		esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, (wifi_rxcb_t) wlan_sta_rx_callback);
+		s_retry_num=0;
+		sta_connected=1;
 	} else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+		ESP_LOGI(TAG,"got IP");
+		esp_netif_action_got_ip(netif, event_base, event_id, event_data);
 		ip_event_got_ip_t *ip=(ip_event_got_ip_t*)event_data;
 		wifid_signal_connected(ip->esp_netif, &ip->ip_info);
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
 		wifid_signal_scan_done();
 	}
 }
+
+void wifi_if_ena_auto_reconnect(int do_reconnect) {
+	if (do_reconnect) {
+		s_retry_num=0;
+	} else {
+		s_retry_num=MAX_RETRY+1; //won't reconnect when this is the case
+	}
+}
+
 
 static esp_netif_t *wifi_sta_filtered_init_netif() {
 	const esp_netif_inherent_config_t base_cfg = {
@@ -248,10 +261,14 @@ static esp_netif_t *wifi_sta_filtered_init_netif() {
 	ESP_ERROR_CHECK(esp_netif_set_driver_config(wifi_filtered_netif, &driver_ifconfig));
 	ESP_ERROR_CHECK(esp_netif_attach(wifi_filtered_netif, &driver_ifconfig));
 	esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, (wifi_rxcb_t) wlan_sta_rx_callback);
+	esp_err_t  ret;
+	if ((ret = esp_wifi_internal_reg_netstack_buf_cb(esp_netif_netstack_buf_ref, esp_netif_netstack_buf_free)) != ESP_OK) {
+		ESP_LOGE(TAG, "netstack cb reg failed with %d", ret);
+	}
 	uint8_t mac[6];
 	esp_read_mac(mac, 0);
 	esp_netif_set_mac(wifi_filtered_netif, mac);
-	esp_netif_action_start(wifi_filtered_netif, 0, 0, 0);
+	esp_netif_action_start(wifi_filtered_netif, NULL, 0, NULL);
 	return wifi_filtered_netif;
 }
 
@@ -278,32 +295,19 @@ void wifi_if_open() {
 		ESP_LOGI(TAG,"Failed to start WiFi");
 		return;
 	}
-//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &sta_event_handler, NULL));
-//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &sta_event_handler, NULL));
+	//Set a default event handler that takes any events.
 	ESP_ERROR_CHECK(esp_event_handler_register(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &sta_event_handler, NULL));
-//	ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &sta_event_handler, NULL));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 	ESP_LOGI(TAG,"STA mode set");
 
-//Note: this won't work if BT is on.
-//	esp_wifi_set_ps(WIFI_PS_NONE);
-
-	rxqueue=xQueueCreate(16, sizeof(rx_packet_t));
+	rxqueue=xQueueCreate(PDP11_IN_FLIGHT_PACKETS, sizeof(rx_packet_t));
 
 	esp_netif_init();
 	esp_event_loop_create_default();
 	netif=wifi_sta_filtered_init_netif();
 	esp_netif_dhcpc_start(netif);
 
-	wifi_config_t* wifi_cfg = (wifi_config_t *)calloc(1,sizeof(wifi_config_t));
-	const char *ssid="Sprite";
-	const char *pass="pannenkoek";
-	strncpy((char*)wifi_cfg->sta.ssid, ssid, sizeof(wifi_cfg->sta.ssid));
-	strncpy((char*)wifi_cfg->sta.password, pass, sizeof(wifi_cfg->sta.password));
-	wifi_cfg->sta.pmf_cfg.capable = true;
-	wifi_cfg->sta.pmf_cfg.required = false;
-	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_cfg));
-	ESP_ERROR_CHECK(esp_wifi_connect());
+	//Note: we do not connect; that is left to the wifid implementation running on the pdp11.
 }
 
 void wifi_if_close() {

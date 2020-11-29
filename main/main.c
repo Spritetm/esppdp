@@ -14,6 +14,7 @@
 #include "esp_spi_flash.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_spiffs.h"
 #include "ie15lcd.h"
 #include "nvs_flash.h"
@@ -25,18 +26,30 @@
 #include "sdmmc_cmd.h"
 #include "sdkconfig.h"
 #include "wifi_if.h"
+#include "wifid.h"
+#include "wifid_iface.h"
+
 
 #define TAG "main"
 
 int main(int argc, char **argv);
 
-#include "esp_heap_trace.h"
-
-
 #if CONFIG_HEAP_TRACING_STANDALONE
+#include "esp_heap_trace.h"
 #define NUM_RECORDS 100
 static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
 #endif
+
+static void wifi_if_autoconnect() {
+	vTaskDelay(2000/portTICK_PERIOD_MS);
+	wifid_cmd_t cmd2={
+		.cmd=CMD_CONNECT,
+		.connect.ssid="Sprite",
+		.connect.pass="pannenkoek"
+	};
+	wifid_parse_packet((uint8_t *)&cmd2, sizeof(wifid_cmd_t));
+}
+
 
 void app_main(void) {
     esp_err_t ret;
@@ -107,6 +120,43 @@ void app_main(void) {
 	}
 
 	bthid_start();
+
+#if 0 //wifid test code
+	wifi_if_open(); //note: normally called from pdp11 sim code
+	vTaskDelay(5000/portTICK_PERIOD_MS);
+	wifid_cmd_t cmd={
+		.cmd=CMD_CONNECT,
+		.connect.ssid="SpriteVpn",
+		.connect.pass="pannenkoek"
+	};
+	wifid_parse_packet((uint8_t *)&cmd, sizeof(wifid_cmd_t));
+	vTaskDelay(15000/portTICK_PERIOD_MS);
+	wifid_cmd_t cmd3={
+		.cmd=CMD_CONNECT,
+		.connect.ssid="Sprite",
+		.connect.pass="pxannenkoek"
+	};
+	wifid_parse_packet((uint8_t *)&cmd3, sizeof(wifid_cmd_t));
+	vTaskDelay(15000/portTICK_PERIOD_MS);
+	wifid_cmd_t cmd2={
+		.cmd=CMD_CONNECT,
+		.connect.ssid="Sprite",
+		.connect.pass="pannenkoek"
+	};
+	wifid_parse_packet((uint8_t *)&cmd2, sizeof(wifid_cmd_t));
+	return;
+#endif
+
+#if 1 //auto-connect to Sprite
+	esp_timer_handle_t h;
+	esp_timer_create_args_t ta={
+		.callback=wifi_if_autoconnect,
+		.name="wifi_autocon"
+	};
+	esp_timer_create(&ta, &h);
+	esp_timer_start_once(h, 5*1000*1000);
+#endif
+
 
 #if CONFIG_HEAP_TRACING_STANDALONE
 	ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );

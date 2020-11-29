@@ -7,10 +7,16 @@
 //Send if WiFi should scan & return available APs
 #define CMD_SCAN 2
 //Sent to localhost when wifid should exit (because a new wifid instance is replacing it)
-#define CMD_QUIT 256
+#define CMD_QUIT 255
 
-typedef struct {
+typedef struct __attribute__((packed)) {
+#ifdef PDP
+	//Gcc for pdp11 seems to bung up the uint32_t size
+	uint8_t cmd;
+	uint8_t unused[3];
+#else
 	uint32_t cmd;
+#endif
 	union {
 		struct {
 			char ssid[32];
@@ -30,8 +36,14 @@ typedef struct {
 //Received over loopback when another wifid instance replaces this one
 #define EV_QUIT CMD_QUIT
 
-typedef struct {
+typedef struct __attribute__((packed)) {
+#ifdef PDP
+	//Gcc for pdp11 seems to bung up the uint32_t size
+	uint8_t resp;
+	uint8_t unused[3];
+#else
 	uint32_t resp;
+#endif
 	union {
 		struct {
 			uint8_t ip[4];
@@ -41,8 +53,8 @@ typedef struct {
 		} connected;
 		struct {
 			char ssid[32];
-			int rssi;
-			int authmode;
+			uint16_t rssi;
+			uint16_t authmode;
 		} scan_res;
 		struct {
 			char msg[32];
