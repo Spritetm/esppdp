@@ -583,7 +583,7 @@ const char *eth_capabilities(void) {
 }
 
 t_stat eth_open(ETH_DEV* dev, const char* name, DEVICE* dptr, uint32 dbit) {
-	printf("eth_open: %s\n", name);
+//	printf("eth_open: %s\n", name);
 	eth_zero(dev);
 	const char *savname="wifi";
 	dev->name = (char *)malloc(strlen(savname)+1);
@@ -596,7 +596,7 @@ t_stat eth_open(ETH_DEV* dev, const char* name, DEVICE* dptr, uint32 dbit) {
 }
 
 t_stat eth_close (ETH_DEV* dev) {
-	printf("eth_close\n");
+//	printf("eth_close\n");
 	wifi_if_close();
 	return SCPE_NOFNC;
 }
@@ -607,7 +607,7 @@ t_stat eth_attach_help(FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, const cha
 }
 
 t_stat eth_check_address_conflict(ETH_DEV* dev, ETH_MAC* const mac) {
-	printf("eth_check_address_conflict\n");
+//	printf("eth_check_address_conflict\n");
 	return SCPE_OK;
 }
 
@@ -616,11 +616,11 @@ t_stat eth_set_throttle (ETH_DEV* dev, uint32 time, uint32 burst, uint32 delay) 
 }
 
 t_stat eth_set_async (ETH_DEV *dev, int latency) {
-	printf("eth_set_async\n");
+//	printf("eth_set_async\n");
 	return SCPE_OK;
 }
 t_stat eth_clr_async (ETH_DEV *dev) {
-	printf("eth_clr_async\n");
+//	printf("eth_clr_async\n");
 	return SCPE_OK;
 }
 
@@ -682,16 +682,16 @@ int eth_read (ETH_DEV* dev, ETH_PACK* packet, ETH_PCALLBACK routine) {
 }
 
 t_stat eth_filter (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses, ETH_BOOL all_multicast, ETH_BOOL promiscuous) {
-	printf("eth_filter\n");
+//	printf("eth_filter\n");
 	return SCPE_OK;
 }
 
 t_stat eth_filter_hash (ETH_DEV* dev, int addr_count, ETH_MAC* const addresses, ETH_BOOL all_multicast, ETH_BOOL promiscuous, ETH_MULTIHASH* const hash) {
-	printf("eth_filter_hash\n");
+//	printf("eth_filter_hash\n");
 	return SCPE_OK;
 }
 int _eth_devices (int max, ETH_LIST* dev) {
-	printf("_eth_devices\n");
+//	printf("_eth_devices\n");
 	return -1;
 }
 const char *eth_version (void) {

@@ -133,7 +133,7 @@ t_bool sim_disk_isavailable (UNIT *uptr) {
 	struct disk_context *ctx;
 	t_bool ret=TRUE;
 	if (!(uptr->flags & UNIT_ATT)) ret=FALSE;
-	printf("sim_disk_isavailable %d\n", ret);
+//	printf("sim_disk_isavailable %d\n", ret);
 	return ret;
 }
 
@@ -152,7 +152,7 @@ t_offset sim_disk_size (UNIT *uptr) {
 	if ((uptr->flags & UNIT_ATT) == 0) return (t_offset)-1;
 	physical_size = ctx->container_size;
 	filesystem_size = physical_size;
-	printf("sim_disk_size: phys %d fs %d\n", (int)physical_size, (int)filesystem_size);
+//	printf("sim_disk_size: phys %d fs %d\n", (int)physical_size, (int)filesystem_size);
 	if ((filesystem_size == (t_offset)-1) || (filesystem_size < physical_size)) return physical_size;
 	return filesystem_size;
 }
@@ -347,7 +347,7 @@ t_stat sim_disk_reset (UNIT *uptr) {
 	if (!(uptr->flags & UNIT_ATT))                          /* attached? */
 		return SCPE_OK;
 
-	sim_debug_unit (ctx->dbit, uptr, "sim_disk_reset(unit=%d)\n", (int)(uptr - ctx->dptr->units));
+//	sim_debug_unit (ctx->dbit, uptr, "sim_disk_reset(unit=%d)\n", (int)(uptr - ctx->dptr->units));
 
 	return SCPE_OK;
 }

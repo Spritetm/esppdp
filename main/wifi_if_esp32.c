@@ -83,10 +83,10 @@ int wifi_if_write(uint8_t *packet, int len) {
 		//filtered out as it's interpreted by the filter code itself
 		return len;
 	}
-//#ifdef DBG_DUMP_PACKETS
+#ifdef DBG_DUMP_PACKETS
 	printf("PDP11 TX:\n");
 	hexdump(packet, len);
-//#endif
+#endif
 	esp_wifi_internal_tx(ESP_IF_WIFI_STA, packet, len);
 	return len;
 }
@@ -117,8 +117,10 @@ static esp_err_t wlan_send_to_pdp(void *buffer, uint16_t len, void *eb, int do_c
 }
 
 void wifi_if_wifid_send_to_pdp(void *buffer, uint16_t len) {
+#ifdef DBG_DUMP_PACKETS
 	printf("wifid resp pkt:\n");
 	hexdump(buffer, len);
+#endif
 	//injects a malloc()'ed packet for wifid into the packet stream to the pdp11
 	rx_packet_t p={};
 	p.len=len;

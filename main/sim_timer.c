@@ -108,7 +108,8 @@ uint32 sim_idle_ms_sleep (unsigned int msec);
 //#define MS_MIN_GRANULARITY 20   /* Uncomment to simulate 20ms host tick size.*/
                                 /* some Solaris and BSD hosts come this way  */
 #ifdef ESP_PLATFORM
-#define MS_MIN_GRANULARITY 10
+#include "sdkconfig.h"
+#define MS_MIN_GRANULARITY (1000 / CONFIG_FREERTOS_HZ)
 #endif
 
 
@@ -1160,6 +1161,14 @@ sim_set_rom_delay_factor (sim_get_rom_delay_factor ()); /* initialize ROM delay 
 
 sim_stop_time = clock_last = clock_start = sim_os_msec ();
 sim_os_clock_resoluton_ms = 1000;
+#ifdef ESP_PLATFORM
+	//c'm on now, no need to cal this, we know these values.
+	sim_os_tick_hz = (1000 / CONFIG_FREERTOS_HZ);
+	sim_os_sleep_inc_ms = (1000 / CONFIG_FREERTOS_HZ);
+	sim_os_clock_resoluton_ms = (1000 / CONFIG_FREERTOS_HZ);
+	sim_idle_rate_ms = (1000 / CONFIG_FREERTOS_HZ);
+	return 0;
+#else
 do {
     uint32 clock_diff;
     
@@ -1178,6 +1187,7 @@ else {
     fprintf (stderr, "Host Clock Resolution:         %u ms\n", sim_os_clock_resoluton_ms);
     }
 return ((sim_idle_rate_ms == 0) || (sim_os_clock_resoluton_ms == 0));
+#endif
 }
 
 /* sim_timer_idle_capable - tell if the host is Idle capable and what the host OS tick size is */

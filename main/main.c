@@ -74,13 +74,13 @@ void app_main(void) {
 #if 1
 	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
 		.format_if_mount_failed = false,
-		.max_files = 5,
+		.max_files = 2,
 		.allocation_unit_size = 16 * 1024
 	};
 	sdmmc_card_t* card;
 
 	sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-	host.max_freq_khz=5000;
+//	host.max_freq_khz=5000;
 	sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 	// GPIOs 15, 2, 4, 12, 13 should have external 10k pull-ups.
 	// Internal pull-ups are not sufficient. However, enabling internal pull-ups
@@ -101,7 +101,7 @@ void app_main(void) {
 	esp_vfs_spiffs_conf_t conf = {
 		.base_path = "/spiffs",
 		.partition_label = NULL,
-		.max_files = 5,
+		.max_files = 2,
 		.format_if_mount_failed = true
 	};
 	// Use settings defined above to initialize and mount SPIFFS filesystem.
@@ -147,7 +147,7 @@ void app_main(void) {
 	return;
 #endif
 
-#if 1 //auto-connect to Sprite
+#if 0 //auto-connect to Sprite
 	esp_timer_handle_t h;
 	esp_timer_create_args_t ta={
 		.callback=wifi_if_autoconnect,
