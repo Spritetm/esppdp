@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <setjmp.h>
+#include <sys/stat.h>
 #include "wifi_if.h"
 
 FILE *sim_deb = NULL;                                   /* debug file */
@@ -846,64 +847,44 @@ t_stat set_mod(DEVICE *dev, UNIT *unit, const char *mod, const char *cp, void *d
 #define RUN_BSD 1
 
 int main (int argc, char *argv[]) {
-	t_stat stat=SCPE_OK;
+	t_stat status=SCPE_OK;
 	sim_deb=stderr;
 	sim_init_sock ();										/* init socket capabilities */
 	sim_finit ();											/* init fio package */
-
-/*
-	sim_time = 0;
-	stop_cpu = FALSE;
-	sim_interval = 0;
-	noqueue_time = 0;
-	sim_clock_queue = QUEUE_LIST_END;
-	sim_is_running = FALSE;
-	sim_log = NULL;
-	if (sim_emax <= 0)
-		sim_emax = 1;
-*/
 	if (sim_timer_init ()) {
 		fprintf (stderr, "Fatal timer initialization error\n");
 		return EXIT_FAILURE;
-		}
-//	sim_register_internal_device (&sim_scp_dev);
-//	sim_register_internal_device (&sim_expect_dev);
-//	sim_register_internal_device (&sim_step_dev);
-//	sim_register_internal_device (&sim_flush_dev);
-//	sim_register_internal_device (&sim_runlimit_dev);
+	}
 	
-	if ((stat = sim_ttinit ()) != SCPE_OK) {
-		fprintf (stderr, "Fatal terminal initialization error\n%s\n",
-			sim_error_text (stat));
+	if ((status = sim_ttinit ()) != SCPE_OK) {
+		fprintf (stderr, "Fatal terminal initialization error\n%s\n", sim_error_text (status));
 		return EXIT_FAILURE;
-		}
+	}
 	if ((sim_eval = (t_value *) calloc (sim_emax, sizeof (t_value))) == NULL) {
 		fprintf (stderr, "Unable to allocate examine buffer\n");
 		return EXIT_FAILURE;
 	};
-//	if (sim_dflt_dev == NULL)								/* if no default */
-//		sim_dflt_dev = sim_devices[0];
+
+	//We boot BSD if there's a root.dsk file available. We boot from the floppy in spiffs otherwise.
+	int has_bsd_dsk=1;
+	struct stat statbuf;
+	if (stat(RA92_DISK_PATH, &statbuf)!=0) has_bsd_dsk=0;
 
 	//Set main memory capacity...
 	DEVICE *cpudev=find_dev("CPU");
-#if RUN_BSD
-	cpudev->units[0].capac=3.5*1024*1024;
-#else
-	//Assign less memory as the floppy needs to be read into memory entirely
-	cpudev->units[0].capac=512*1024;
-#endif
+	if (has_bsd_dsk) {
+		cpudev->units[0].capac=3.5*1024*1024;
+	} else {
+		//Assign less memory as the floppy needs to be read into memory entirely
+		cpudev->units[0].capac=512*1024;
+	}
 
-	if ((stat = reset_all (0)) != SCPE_OK) {
+	if ((status = reset_all (0)) != SCPE_OK) {
 		fprintf (stderr, "Fatal simulator initialization error\n%s\n",
-			sim_error_text (stat));
+			sim_error_text (status));
 		return EXIT_FAILURE;
 	}
-//	if ((stat = sim_brk_init ()) != SCPE_OK) {
-//		fprintf (stderr, "Fatal breakpoint table initialization error\n%s\n",
-//			sim_error_text (stat));
-//		return EXIT_FAILURE;
-//	}
-	/* always check for register definition problems */
+
 //	sim_sanity_check_register_declarations ();
 	sim_timer_precalibrate_execution_rate ();
 //	show_version (stdnul, NULL, NULL, 1, NULL);				/* Quietly set SIM_OSTYPE */
@@ -917,44 +898,32 @@ int main (int argc, char *argv[]) {
 	set_mod(dev, dev->units, "TYPE", mac, "DEQNA");
 	dev->attach(dev->units, "WIFI");
 
-	//find rq device, boot off it
-#if RUN_BSD
-	dev=find_dev("RQ");
-	set_mod(dev, dev->units, "RA92", NULL, NULL);
-	printf("Attach RA92 disk to RQ\n");
-	stat=dev->attach(dev->units, RA92_DISK_PATH);
-	if (stat!=SCPE_OK) printf("Attach failed...\n");
-	printf("Boot from RQ\n");
-#else
-	printf("Find RX\n");
-	dev=find_dev("RX");
-	printf("Attach disk to RX\n");
-	stat=attach_unit(dev->units, RX_FLOPPY_PATH);
-	if (stat!=SCPE_OK) printf("Attach failed...\n");
-	printf("Boot from RX\n");
-#endif
-	stat=dev->boot(0, dev);
-	if (stat!=SCPE_OK) printf("Boot failed...\n");
+	if (has_bsd_dsk) {
+		//find rq device, boot off it
+		dev=find_dev("RQ");
+		set_mod(dev, dev->units, "RA92", NULL, NULL);
+		printf("Attach RA92 disk to RQ\n");
+		status=dev->attach(dev->units, RA92_DISK_PATH);
+		if (status!=SCPE_OK) printf("Attach failed...\n");
+		printf("Boot from RQ\n");
+	} else {
+		printf("Find RX\n");
+		dev=find_dev("RX");
+		printf("Attach disk to RX\n");
+		status=attach_unit(dev->units, RX_FLOPPY_PATH);
+		if (status!=SCPE_OK) printf("Attach failed...\n");
+		printf("Boot from RX\n");
+	}
+	status=dev->boot(0, dev);
+	if (status!=SCPE_OK) printf("Boot failed...\n");
 
 	sim_set_throt(1, "90%");
 
 	printf("Main sim start\n");
 	while(1) {
-		stat=sim_instr();
-		if (stat!=SCPE_OK) {
-//			printf("Sim_instr exited with 0x%X\n", stat);
-//			exit(0);
-		}
+		status=sim_instr();
 	}
 	
-//	detach_all (0, TRUE);									/* close files */
-	//sim_set_deboff (0, NULL);								/* close debug */
-	//sim_set_logoff (0, NULL);								/* close log */
-	//sim_set_notelnet (0, NULL);								/* close Telnet */
-	//vid_close ();											/* close video */
-	//sim_ttclose ();											/* close console */
-	//AIO_CLEANUP;											/* Asynch I/O */
 	sim_cleanup_sock ();									/* cleanup sockets */
-	//fclose (stdnul);										/* close bit bucket file handle */
 	return 0;
 }

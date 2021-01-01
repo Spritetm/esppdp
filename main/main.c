@@ -71,7 +71,7 @@ void app_main(void) {
 	const char signon[]="Initializing emulator...\r\n";
 	for (const char *p=signon; *p!=0; p++) ie15_sendchar(*p);
 
-#if 1
+	//Initialize SD-card, if possible
 	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
 		.format_if_mount_failed = false,
 		.max_files = 2,
@@ -93,11 +93,13 @@ void app_main(void) {
 	ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
 	if (ret != ESP_OK) {
 		ESP_LOGE(TAG, "SD-card: Failed to mount filesystem.");
-		return;
+		const char noflopstr[]="No SD card. Booting from built-in floppy.\r\n";
+		for (const char *p=noflopstr; *p!=0; p++) ie15_sendchar(*p);
+	} else {
+		sdmmc_card_print_info(stdout, card);
 	}
-    sdmmc_card_print_info(stdout, card);
-#endif
 
+	//Mount spiffs. This contains a floppy image.
 	esp_vfs_spiffs_conf_t conf = {
 		.base_path = "/spiffs",
 		.partition_label = NULL,
