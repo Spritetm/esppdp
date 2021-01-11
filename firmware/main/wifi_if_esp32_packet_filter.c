@@ -1,3 +1,14 @@
+//WiFi packet filter. The routines here decide where a certain packet needs to be
+//sent to. (pdp11 or lwip).
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
+ */
+
 #include "wifi_if_esp32_packet_filter.h"
 #include "lwip/prot/ethernet.h"
 #include "lwip/prot/ieee.h"
@@ -15,7 +26,7 @@
 
 //Because we have a split personality TCP/IP stack (both the PDP11 and the LWIP
 //stack think that they own the interface), we need to nicely divy up where we send
-//received packets. We allow any DHCP-related things to be handled by the 
+//received packets.
 int wifi_if_filter_find_packet_dest(uint8_t *buffer, uint16_t len) {
 	struct eth_hdr *eth=(struct eth_hdr*)buffer;
 	if (ntohs(eth->type)==ETHTYPE_ARP) {

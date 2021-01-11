@@ -1,3 +1,4 @@
+//Common definitions between the wifid esp32 and 2.11bsd code.
 #define PORT_RECV	67
 #define PORT_SEND	68
 

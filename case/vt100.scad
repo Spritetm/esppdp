@@ -1,3 +1,14 @@
+//VT102 scale model, top+bottom half + fastener locations to hold them together, plus
+//PCB and LCD mounts.
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
+ */
+
 use <threadlib/threadlib.scad>
 
 pix_scale=13; //this many pixels in one mm

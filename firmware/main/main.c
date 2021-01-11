@@ -1,11 +1,13 @@
-/* Hello World Example
+//Main code for pdp11 emulator thing
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
+ */
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
@@ -40,20 +42,13 @@ int main(int argc, char **argv);
 static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
 #endif
 
-static void wifi_if_autoconnect() {
-	vTaskDelay(2000/portTICK_PERIOD_MS);
-	wifid_cmd_t cmd2={
-		.cmd=CMD_CONNECT,
-		.connect.ssid="Sprite",
-		.connect.pass="pannenkoek"
-	};
-	wifid_parse_packet((uint8_t *)&cmd2, sizeof(wifid_cmd_t));
-}
+//ESP-IDF doesn't implement nanosleep, but SIMH needs it. We implement it here
+//using an esp_timer. (Note this code is not re-entrant, do not try to sleep
+//from multiple threads, if you need a generic nanosleep implementation look
+//elsewhere!)
 
-
-esp_timer_handle_t nanosleep_timer;
+static esp_timer_handle_t nanosleep_timer;
 static TaskHandle_t nanosleep_task = NULL;
-
 
 void nanosleep_callback(void *arg) {
 	xTaskNotifyGive(nanosleep_task);
@@ -81,18 +76,18 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
 
 
 void app_main(void) {
-    esp_err_t ret;
+	esp_err_t ret;
 #if CONFIG_HEAP_TRACING_STANDALONE
 	ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
 #endif
 
-    /* Initialize NVS — it is used to store PHY calibration data */
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+	//Initialize NVS
+	ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(ret);
 
 	ie15_init();
 	//We cheat here: as the buffer in the IE15 emu is only 8 bytes, the following routine
@@ -123,7 +118,7 @@ void app_main(void) {
 	if (ret != ESP_OK) {
 		ESP_LOGE(TAG, "SD-card: Failed to mount filesystem.");
 		const char noflopstr[]="No SD card. Booting from built-in floppy.\r\n";
-//		for (const char *p=noflopstr; *p!=0; p++) ie15_sendchar(*p);
+		for (const char *p=noflopstr; *p!=0; p++) ie15_sendchar(*p);
 	} else {
 		sdmmc_card_print_info(stdout, card);
 	}
@@ -152,52 +147,18 @@ void app_main(void) {
 
 	bthid_start();
 
-#if 0 //wifid test code
-	wifi_if_open(); //note: normally called from pdp11 sim code
-	vTaskDelay(5000/portTICK_PERIOD_MS);
-	wifid_cmd_t cmd={
-		.cmd=CMD_CONNECT,
-		.connect.ssid="SpriteVpn",
-		.connect.pass="pannenkoek"
-	};
-	wifid_parse_packet((uint8_t *)&cmd, sizeof(wifid_cmd_t));
-	vTaskDelay(15000/portTICK_PERIOD_MS);
-	wifid_cmd_t cmd3={
-		.cmd=CMD_CONNECT,
-		.connect.ssid="Sprite",
-		.connect.pass="pxannenkoek"
-	};
-	wifid_parse_packet((uint8_t *)&cmd3, sizeof(wifid_cmd_t));
-	vTaskDelay(15000/portTICK_PERIOD_MS);
-	wifid_cmd_t cmd2={
-		.cmd=CMD_CONNECT,
-		.connect.ssid="Sprite",
-		.connect.pass="pannenkoek"
-	};
-	wifid_parse_packet((uint8_t *)&cmd2, sizeof(wifid_cmd_t));
-	return;
-#endif
-
-#if 0 //auto-connect to Sprite
-	esp_timer_handle_t h;
-	esp_timer_create_args_t ta={
-		.callback=wifi_if_autoconnect,
-		.name="wifi_autocon"
-	};
-	esp_timer_create(&ta, &h);
-	esp_timer_start_once(h, 5*1000*1000);
-#endif
-
 	nanosleep_init();
 
 #if CONFIG_HEAP_TRACING_STANDALONE
 	ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
 	ESP_ERROR_CHECK( heap_trace_start(HEAP_TRACE_LEAKS) );
 #endif
+	
+	//Start up main SIMH emulator
 	char *args[]={"simh", 0};
-	main(1, args);
-    fflush(stdout);
-    esp_restart();
+	main(1, args);		//Note: This is in scp.c and is the SIMH main routine.
+	fflush(stdout);
+	esp_restart();
 }
 
 

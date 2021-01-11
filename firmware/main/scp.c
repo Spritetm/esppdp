@@ -1,3 +1,36 @@
+/*
+ This is a thoroughly hacked-up version of the SIMH scp.c file, keeping only what's needed to
+ start up emulation. All hackwork is (c) 202 Sprite_tm.
+
+ Original copyright follows:
+*/
+/* scp.c: simulator control program
+
+   Copyright (c) 1993-2016, Robert M Supnik
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+   ROBERT M SUPNIK BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+   IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   Except as contained in this notice, the name of Robert M Supnik shall not be
+   used in advertising or otherwise to promote the sale, use or other dealings
+   in this Software without prior written authorization from Robert M Supnik.
+*/
+
+
 #include "sim_defs.h"
 #include "sim_rev.h"
 #include "sim_disk.h"
@@ -842,9 +875,6 @@ t_stat set_mod(DEVICE *dev, UNIT *unit, const char *mod, const char *cp, void *d
 #define RA92_DISK_PATH "/sdcard/rq.dsk"
 #define RX_FLOPPY_PATH "/spiffs/floppy.dsk"
 #endif
-
-//1 to run 2.11BSD
-#define RUN_BSD 1
 
 int main (int argc, char *argv[]) {
 	t_stat status=SCPE_OK;

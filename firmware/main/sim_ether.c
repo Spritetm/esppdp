@@ -1,3 +1,10 @@
+/*
+ This is a thoroughly gutted-up version of the SIMH sim_ether.c file, keeping only what's needed to
+ start up emulation. All hackwork is (c) 2020 Sprite_tm.
+
+ Original copyright follows:
+*/
+
 /* sim_ether.c: OS-dependent network routines
   ------------------------------------------------------------------------------
    Copyright (c) 2002-2007, David T. Hittner

@@ -1,3 +1,13 @@
+//Quick and dirty routines to convert a BT-attached keyboard (special case: or gamepad, to
+//control the original PDP11-clone Tetris) to serial link data as sent by a terminal.
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>

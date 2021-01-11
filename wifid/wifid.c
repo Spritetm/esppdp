@@ -1,13 +1,23 @@
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <unistd.h> 
-#include <string.h> 
-#include <netdb.h> 
-#include <unistd.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#include <netinet/in.h> 
+/*
+This is the source for wifid, a program that runs on 2.11BSD to send out broadcast
+UDP packets that get picked up by the network layer on the ESP32. It can instruct the
+ESP32 code to scan for WiFi networks and connect to them. The ESP32 will then 
+communicate the IP/netmask/... it received so wifid can configure the 2.11bsd network
+interface accordingly.
+
+This is supposed to be crosscompiled with gcc. I'm decently sure the native compiler will
+choke on the majority of lines of this code.
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdint.h>
 #include <syslog.h>
 
