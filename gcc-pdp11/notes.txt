@@ -1,0 +1,53 @@
+How to generate a GCC toolchain that compiles stuff for a PDP11 2.11BSD version: my
+notes. Note that this is not a tutorial nor a shell script that automagically does
+things, but I hope it's enough info.
+
+export CROSSDIR=${PWD}/crosstool
+
+tar -xvf gcc-10.2.0.tar.gz 
+tar -xvf binutils-2.35.1.tar.gz 
+
+tar -xvf binutils-2.35.1.tar.gz 
+cd binutils-2.35.1
+./configure --prefix=$CROSSDIR --target=pdp11-bsd2.11
+make && make install
+
+# note - libssp, not libspp
+
+mkdir gcc-build
+cd gcc-build
+../gcc-10.2.0/configure --prefix=$CROSSDIR --target=pdp11-bsd2.11 --enable-languages=c --disable-libssp
+PATH=${PATH}:${CROSSDIR} make
+PATH=${PATH}:${CROSSDIR} make install
+
+export PATH=${PATH}:${CROSSDIR}/bin
+
+cd crosstool/pdp11-bsd2.11
+tar -xvf ../../lib.tar
+
+cd crosstool/lib/gcc/pdp11-bsd2.11/10.2.0/
+tar -xvf ../../lib.tar
+
+# The BSD headers are old and in a format GCC doesn't quite like... fix by using some
+# headers from the RetroBSD project
+git clone https://github.com/RetroBSD/retrobsd.git
+cp -r retrobsd/include/* crosstool/lib/gcc/pdp11-bsd2.11/10.2.0/include/
+rm crosstool/lib/gcc/pdp11-bsd2.11/10.2.0/include/sys
+mkdir crosstool/lib/gcc/pdp11-bsd2.11/10.2.0/include/sys
+cp -r retrobsd/sys/include/* crosstool/lib/gcc/pdp11-bsd2.11/10.2.0/include/sys
+
+# 2.11BSD libc is missing _atexit and gcc refuses to compile without it. Inject a dummy
+# function to fix this.
+echo 'void _atexit() { }' > atexit.c
+pdp11-bsd2.11-gcc -c -o atexit.o atexit.c
+pdp11-bsd2.11-ar qs crosstool/pdp11-bsd2.11/lib/libc.a atexit.o
+
+# Gdb can be useful, sometimes. 2.11bsd natively uses adb
+# (http://retrobsd.org/wiki/doku.php/doc/adb/tutorial) but gdb can be used
+# to look op symbols etc.
+tar -xvf gdb-9.2.tar.gz
+mkdir gdbbuild
+cd gdbbuild
+../gdb-9.2/configure --prefix=$CROSSDIR --target=pdp11-bsd2.11
+make
+make install

@@ -1,0 +1,21 @@
+This disk is a full-on 2.11bsd installation. Additionaly, the install is modified to add
+wifid to the package. After booting this, you should be able to login as root with
+the password 'esppdp11', or as the unprivileged user 'pdp11' with the same password.
+
+To connect to a wifi network, as root, use wifid. For instance, to connect to the
+access point called MyWLAN with the password MyPassword, use:
+wifid -connect MyWLAN MyPassword
+wifid will remember the last-connected ssid and password and reconnect to that
+network on device startup.
+
+One last note: Be sure to always shut down your 2.11BSD session. The file system is somewhat
+prone to corruption if you just do the equivalent of pulling the plug instead of using
+the 'halt' command to shut things down.
+
+To use the disk, unzip and put the resulting file in the root of a FAT32-formatted 
+micro-SD-card. The ESP32 SimH build will automatically pick it up and boot it. Do note
+that starting up requires some manual interaction: you have to press 'enter' at the very 
+first prompt ':' to boot into the OS. Then, at the prompt that follows about a minute later
+'#', press ctrl-D to exit single-user mode and boot into the full system.
+
+

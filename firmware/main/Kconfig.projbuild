@@ -1,0 +1,16 @@
+menu "ESP-PDP11 Configuration"
+
+    choice ESPPDP_HARDWARE
+        prompt "Hardware to run on"
+        default ESPPDP_HW_WROVER_KIT
+        help
+            Target hardware selection
+
+        config ESPPDP_HW_WROVER_KIT
+            bool "Esp32-Wrover-Kit development board"
+        config ESPPDP_HW_FINAL
+            bool "Final dedicated board"
+    endchoice
+
+
+endmenu
