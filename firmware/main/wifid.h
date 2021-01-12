@@ -5,3 +5,4 @@
 void wifid_parse_packet(uint8_t *buffer, int len);
 void wifid_signal_scan_done();
 void wifid_signal_connected(esp_netif_t *netif, esp_netif_ip_info_t *ip);
+void wifid_signal_noconnect();

@@ -82,6 +82,12 @@ void wifid_signal_connected(esp_netif_t *netif, esp_netif_ip_info_t *ip) {
 	send_return_packet(resp_pkt);
 }
 
+static int send_error_on_disconnect=0;
+
+void wifid_signal_noconnect() {
+	if (send_error_on_disconnect) send_error_msg("Couldn't connect to AP");
+}
+
 void wifid_signal_scan_done() {
 	char *resp_pkt;
 	uint16_t ap_count;
@@ -122,11 +128,13 @@ void wifid_parse_packet(uint8_t *buffer, int len) {
 		wifi_cfg.sta.pmf_cfg.required = false;
 		esp_err_t r=esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg);
 		if (r==ESP_OK) {
+			send_error_on_disconnect=0;
 			wifi_if_ena_auto_reconnect(0);
 			esp_wifi_disconnect();
 			vTaskDelay(1000/portTICK_PERIOD_MS); //hacky, should perhaps use a callback from the disconnect event?
 			printf("connect\n");
 			wifi_if_ena_auto_reconnect(1);
+			send_error_on_disconnect=1;
 			r=esp_wifi_connect();
 		}
 		if (r!=ESP_OK) {

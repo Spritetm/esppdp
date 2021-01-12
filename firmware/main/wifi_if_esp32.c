@@ -51,7 +51,7 @@ in the WiFi rx callback: we use a packet filter function to decide if the receiv
 should be forwarded to the PDP11, the LWIP stack, both, or neither.
 */
 
-#define MAX_RETRY 25
+#define MAX_RETRY 10
 #define TAG "wifi_if"
 #define PDP11_IN_FLIGHT_PACKETS 32
 
@@ -220,6 +220,7 @@ static void sta_event_handler(void* arg, esp_event_base_t event_base,
 		} else {
 			ESP_LOGI(TAG, "Disconnected from AP, not retrying.");
 			sta_connected = 0;
+			wifid_signal_noconnect();
 //			esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, NULL);
 		}
 		esp_netif_action_disconnected(netif, event_base, event_id, event_data);
