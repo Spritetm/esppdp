@@ -22,6 +22,7 @@ slot_depth=15;
 hull_thickness_mm=2.5;
 hull_thickness=hull_thickness_mm*pix_scale;
 lip_height=3;
+show_lcd=0;
 
 faceplate_angle=9;
 
@@ -169,12 +170,14 @@ module vt100_model() {
 }
 
 module lcd() {
+   if (show_lcd == 1) {
     //sizes are from KD018QVFMN010 specsheet
     tol=0.25; //tolerance on outside dimensions
     translate([721/pix_scale, -400/pix_scale,23/pix_scale]) rotate([-90-faceplate_angle,180, -90]) union() {
         translate([-tol/2,-tol/2,-tol/2]) cube([46.7+tol, 34.7+tol, 2.50+tol]); //display itself
         %translate([3.2, 4.03, 0]) cube([35.52, 26.64, 2.50+tol+0.1]); //visible area, stick out a bit
     }
+   }
 }
 
 
