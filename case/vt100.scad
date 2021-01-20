@@ -45,7 +45,7 @@ if (render_tp==1 || render_tp==2) {
             translate([25, -500, -500]) cube([1000,1000,1000]);
         }
     }
-} else if (render_tp==3 || render_tp==4 || render_tp==5)) {
+} else if (render_tp==3 || render_tp==4 || render_tp==5) {
     intersection() {
         union() {
             if (render_tp==3 || render_tp==5) {
