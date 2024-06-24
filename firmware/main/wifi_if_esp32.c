@@ -66,6 +66,7 @@ typedef struct {
 QueueHandle_t rxqueue;
 
 static esp_netif_t *netif;
+void esp_read_mac(uint8_t *,int);
 
 //Gets called whenever the local tcp/ip stack wants to transmit something
 static esp_err_t wifi_netif_tx(void *driver, void *buffer, size_t len) {

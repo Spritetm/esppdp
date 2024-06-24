@@ -8,3 +8,10 @@ original Tetris, or do some die-hard computing on 2.11BSD.
 
 Well, someone had to put back the 'mini' in 'minicomputer', right?
 
+This fork contains a set of patches to correct build errors in IDF 5.0
+Ian Schofield (Isysxp)
+October 2023
+
+---
+
+**>> changes to integrate sunton 2832S028 board and ESP-IDF 5.2.1 currently in Sunton_2832S028 branch <<**

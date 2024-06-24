@@ -3609,8 +3609,8 @@ if (cptr) {
     if (r == SCPE_OK) {
         pa = relocC (va, sim_switches);                 /* relocate */
         if (pa < MAXMEMSIZE)
-            fprintf (of, "Virtual %-o = physical %-o\n", va, pa);
-        else fprintf (of, "Virtual %-o is not valid\n", va);
+            fprintf (of, "Virtual %-lo = physical %-o\n", va, pa);
+        else fprintf (of, "Virtual %-lo is not valid\n", va);
         return SCPE_OK;
         }
     }
