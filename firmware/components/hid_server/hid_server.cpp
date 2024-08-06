@@ -14,7 +14,7 @@
 ** ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 ** SOFTWARE.
 */
-
+#pragma GCC diagnostic ignored  "-Wformat"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +26,9 @@ using namespace std;
 
 #include "hci_server.h"
 #include "hid_server.h"
+
+#include "esp_log.h"
+#define TAG "hid_server"
 
 enum {
     HID_SDP_PSM = 0x0001,
@@ -301,7 +304,7 @@ public:
     void PAD(int n)
     {
         while (n--)
-            printf("    ");
+	  ESP_LOGI(TAG,"    ");
     }
 
     int get_id16()
@@ -309,7 +312,7 @@ public:
         uint32_t n;
         int t = header(n);
         if (t != SDP_DE_UINT || n != 2) {
-            printf("bad sdp id\n");
+	    ESP_LOGE(TAG,"bad sdp id\n");
             return -1;
         }
         return u16();
@@ -333,7 +336,7 @@ public:
     int item(int len, int level = 0, bool want_id = true)
     {
         PAD(level);
-        printf("{\n");
+        ESP_LOGI(TAG,"{\n");
         const uint8_t* end = _data + len;
         uint32_t n,id;
         while (_data < end) {
@@ -341,12 +344,12 @@ public:
                 _current_id = get_id16();
                 if (_current_id == -1)
                     return -1;
-                printf("%s %d\n",get_name(_current_id),_current_id);
+                ESP_LOGI(TAG,"%s %d\n",get_name(_current_id),_current_id);
             }
             int t = header(n);
             switch (t) {
                 case SDP_DE_NULL:
-                    printf("SDP_DE_NULL\n");
+                    ESP_LOGI(TAG,"SDP_DE_NULL\n");
                     break;
                 case SDP_DE_SEQ:            // it is a sequence
                     item(n,level+1,false);  // just a list
@@ -357,21 +360,21 @@ public:
                         case 1:
                             id = u8();
                             PAD(level);
-                            printf("SDP_DE_UINT8 %d\n",id);
+                            ESP_LOGI(TAG,"SDP_DE_UINT8 %d\n",id);
                             break;
                         case 2:
                             id = u16();
                             PAD(level);
-                            printf("SDP_DE_UINT16 %d\n",id);
+                            ESP_LOGI(TAG,"SDP_DE_UINT16 %d\n",id);
                             break;
                         case 4:
                             id = u32();
                             PAD(level);
-                            printf("SDP_DE_UINT32 %d\n",id);
+                            ESP_LOGI(TAG,"SDP_DE_UINT32 %d\n",id);
                             break;
                         default:
                             PAD(level);
-                            printf("type:%d skipping %d\n",t,n);
+                            ESP_LOGI(TAG,"type:%d skipping %d\n",t,n);
                             _data += n;
                     }
                     break;
@@ -381,7 +384,7 @@ public:
                     _data += n;
                     on_string(s);
                     PAD(level);
-                    printf("SDP_DE_STRING: %s\n",s.c_str());
+                    ESP_LOGI(TAG,"SDP_DE_STRING: %s\n",s.c_str());
                 }
                     break;
                 case SDP_DE_UUID:
@@ -393,25 +396,25 @@ public:
                         default: _data += n;
                     }
                     PAD(level);
-                    printf("SDP_DE_UUID 0x%08X\n",id);
+                    ESP_LOGI(TAG,"SDP_DE_UUID 0x%08X\n",id);
                     break;
                 case SDP_DE_BOOL:
                     PAD(level);
-                    printf("SDP_DE_BOOL ");
-                    printf("%s\n",*_data++ ? "true" : "false");
+                    ESP_LOGI(TAG,"SDP_DE_BOOL ");
+                    ESP_LOGI(TAG,"%s\n",*_data++ ? "true" : "false");
                     break;
                 case SDP_DE_URL:
-                    printf("SDP_DE_URL %d bytes\n",n);
+                    ESP_LOGI(TAG,"SDP_DE_URL %d bytes\n",n);
                     _data += n;
                     break;
                 default:
                     PAD(level);
-                    printf("unhandled type:%d skipping %d\n",t,n);
+                    ESP_LOGI(TAG,"unhandled type:%d skipping %d\n",t,n);
                     _data += n;
             }
         }
         PAD(level);
-        printf("}\n");
+        ESP_LOGI(TAG,"}\n");
         return 0;
     }
 
@@ -432,11 +435,11 @@ public:
     void dump()
     {
         string s = _SrvName + " " + _SrvDesc + " " + _ProviderName;
-        printf("%s\n",s.c_str());
+        ESP_LOGI(TAG,"%s\n",s.c_str());
         const uint8_t* d = (const uint8_t*)_HIDDescriptor.c_str();
         int n = (int)_HIDDescriptor.length();
         for (int i = 0; i < n; i++)
-            printf("%02X,",d[i]);
+            ESP_LOGI(TAG,"%02X,",d[i]);
     }
 
     void parse(const uint8_t* data, int len)
@@ -574,9 +577,9 @@ void InputDevice::authentication_complete(int status)
 {
     // entered the wrong kb code...
     if (status) {
-        printf("pin didn't work, won't create a link key: %d\n", status);
+        ESP_LOGE(TAG,"pin didn't work, won't create a link key: %d\n", status);
 	}
-	printf("Auth complete\n");
+	ESP_LOGI(TAG,"Auth complete\n");
 
     if (!_reconnect) {
         _control = l2_open(&_bdaddr, HID_CONTROL_PSM, false);
@@ -607,7 +610,7 @@ const char* _nams[] = {
 
 void InputDevice::socket_changed(int socket, int state)
 {
-    printf("s:%d %s\n",socket,_nams[state]);
+    ESP_LOGI(TAG,"s:%d %s\n",socket,_nams[state]);
     if ((socket == _sdp) && (state == L2CAP_OPEN))  // wait for sdp channel to be open before sending query
         start_sdp();
     else if ((socket == _control) && (state == L2CAP_OPEN)) {
@@ -675,7 +678,7 @@ class HIDSource {
             d->_control = d->_interrupt = d->_sdp = 0;
             d->_state = InputDevice::CLOSED;
             _devices.push_back(d);
-            printf("%s:%06X input device added\n",batostr(d->_bdaddr),d->_dev_class);
+            ESP_LOGI(TAG,"%s:%06X input device added\n",batostr(d->_bdaddr),d->_dev_class);
         }
         return d;
     }
@@ -757,7 +760,7 @@ class HIDSource {
 
     void hid_control(InputDevice* d, const uint8_t* data, int len)
     {
-        printf("HID CONTROL %02X %d\n",data[0],len);
+        ESP_LOGI(TAG,"HID CONTROL %02X %d\n",data[0],len);
     }
 
     // get hid (events). max one per call
@@ -771,7 +774,7 @@ class HIDSource {
                     return len;
                 }
                 if (len < 0) {
-                    printf("hid shutting down TODO\n");
+                    ESP_LOGI(TAG,"hid shutting down TODO\n");
                     d->disconnection_complete();
                 }
             }

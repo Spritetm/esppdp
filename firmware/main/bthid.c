@@ -19,6 +19,10 @@
 #include "bthid.h"
 #include "usb_hid_keys.h"
 
+#include "esp_log.h"
+#define TAG "bthid"
+
+
 static RingbufHandle_t bthidrb;
 
 typedef struct {
@@ -142,7 +146,7 @@ static void handle_kb_key(uint8_t modifiers, uint8_t key) {
 
 
 static void bthid_task(void *parm) {
-	printf("bthid: starting\n");
+        ESP_LOGI(TAG,"bthid: starting\n");
 	hid_init("esppdp");
 	uint8_t old_kbrep[64];
 	int old_kbrep_len=0;
@@ -151,9 +155,9 @@ static void bthid_task(void *parm) {
 		uint8_t buf[64];
 		int len=hid_get(buf, 64);
 		if (len>0 && buf[0]==0xa1) {
-			printf("HID report: %d bytes\n", len);
-			for (int j=0; j<len; j++) printf("%02hhX ", buf[j]);
-			printf("\n");
+			ESP_LOGI(TAG,"HID report: %d bytes\n", len);
+			for (int j=0; j<len; j++) ESP_LOGI(TAG,"%02hhX ", buf[j]);
+			ESP_LOGI(TAG,"\n");
 			char c=0;
 			if (buf[1]==0x1) {
 				//keyboard

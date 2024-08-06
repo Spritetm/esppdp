@@ -104,7 +104,8 @@
         print_sym               print symbolic output
         parse_sym               parse symbolic input
 */
-
+#pragma GCC diagnostic ignored  "-Wformat"
+#pragma GCC diagnostic ignored  "-Wchar-subscripts"
 #ifndef SIM_DEFS_H_
 #define SIM_DEFS_H_    0
 

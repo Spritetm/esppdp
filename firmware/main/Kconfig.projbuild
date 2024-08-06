@@ -10,6 +10,8 @@ menu "ESP-PDP11 Configuration"
             bool "Esp32-Wrover-Kit development board"
         config ESPPDP_HW_FINAL
             bool "Final dedicated board"
+        config ESPPDP_HW_2432S028
+            bool "Sunton 2432S028 board"
     endchoice
 
 

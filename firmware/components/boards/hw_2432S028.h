@@ -1,0 +1,37 @@
+// HW definition for Sunton 2432S028
+// Sven Muehlberg
+
+
+#define ESP32_2432S028R
+
+#define DISPLAY_WIDTH 240
+#define DISPLAY_HEIGHT 320
+#define DISPLAY_CHW 4
+#define DISPLAY_CHH 10
+#define DISPLAY_BCKL 21
+#define DISPLAY_BCKL_ON 1
+#define DISPLAY_BCKL_OFF 0
+#define DISPLAY_INVERT 0
+#define DISPLAY_ROTATE 1
+
+#define DISPLAY_SPI
+#define DISPLAY_SPI_HOST HSPI_HOST
+#define DISPLAY_SPI_DMA SPI_DMA_CH2
+#define DISPLAY_SPI_MODE 0
+#define DISPLAY_SPI_MISO GPIO_NUM_NC
+#define DISPLAY_SPI_MOSI 13
+#define DISPLAY_SPI_SCLK 14
+#define DISPLAY_SPI_CS 15
+#define DISPLAY_SPI_DC 2
+#define DISPLAY_SPI_RST GPIO_NUM_NC
+#define DISPLAY_SPI_HZ 24000000
+
+#define SD_SPI
+#define SD_SPI_HOST SPI3_HOST
+#define SD_SPI_DMA SPI_DMA_CH1
+#define SD_SPI_CS 5
+#define SD_SPI_MOSI 23
+#define SD_SPI_SCLK 18
+#define SD_SPI_MISO 19
+
+// #define SD_NONE

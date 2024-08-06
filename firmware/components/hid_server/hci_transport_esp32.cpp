@@ -3,6 +3,9 @@
 
 #include "hci_transport.h"
 
+#include "esp_log.h"
+#define TAG "hci_transport_esp32"
+
 //=============================================================================================
 //=============================================================================================
 //  hci transport for esp32
@@ -22,13 +25,13 @@ hci_handle hci_open()
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     esp_err_t ret = esp_bt_controller_init(&bt_cfg);
     if (ret != ESP_OK) {
-        printf("Bluetooth Controller initialize failed: %s", esp_err_to_name(ret));
+      ESP_LOGE(TAG,"Bluetooth Controller initialize failed: %s", esp_err_to_name(ret));
         return NULL;
     }
 	//Note: the mode is dependent on what's enabled in menuconfig; will fail if they differ
     ret = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT); //ESP_BT_MODE_BTDM
     if (ret != ESP_OK) {
-        printf("Bluetooth Controller enable failed: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG,"Bluetooth Controller enable failed: %s", esp_err_to_name(ret));
         return NULL;
     }
 
@@ -83,14 +86,14 @@ static uint32_t open_nvs()
 {
     nvs_open("esp_8_bit", NVS_READWRITE, &_nvs_handle);
     if (!_nvs_handle)
-        printf("_nvs_handle open failed!\n");
+      ESP_LOGE(TAG,"_nvs_handle open failed!\n");
 #if 0
     nvs_iterator_t it = nvs_entry_find("nvs", "esp_8_bit", NVS_TYPE_ANY);
     while (it != NULL) {
         nvs_entry_info_t info;
         nvs_entry_info(it, &info);
         it = nvs_entry_next(it);
-        printf("key '%s', type '%d' \n", info.key, info.type);
+        ESP_LOGE(TAG,"key '%s', type '%d' \n", info.key, info.type);
     };
 #endif
     return _nvs_handle;
@@ -119,5 +122,5 @@ void sys_set_pref(const char* key, const char* value)
     if (ESP_OK == nvs_set_str(h, key, value))
         nvs_commit(h);
     else
-        printf("sys_set_pref %s:%s failed (key length <= 15?)\n",key,value);
+        ESP_LOGE(TAG,"sys_set_pref %s:%s failed (key length <= 15?)\n",key,value);
 }

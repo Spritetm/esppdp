@@ -8,11 +8,33 @@
  * ----------------------------------------------------------------------------
  */
 
+/*
+ * ----------------------------------------------------------------------------
+ * Added SPI connected SDcards and more generalized hw definition approach.
+ * SvenMb
+ * ----------------------------------------------------------------------------
+ */
+
+
 #include <stdio.h>
+#include <time.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
+
+// load hardware specific definitions, use 'idf.py menuconfig' to set it 
+
+#if CONFIG_ESPPDP_HW_WROVER_KIT
+#include "hw_wrover.h"
+#elif CONFIG_ESPPDP_HW_2432S028
+#include "hw_2432S028.h"
+#elif CONFIG_ESPPDP_HW_FINAL
+#include "hw_final.h"
+#else
+#error ESPPDP Hardware not configured, use 'idf.py menuconfig' to choose
+#endif
+
 #include "esp_spi_flash.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -22,8 +44,12 @@
 #include "nvs_flash.h"
 #include "bthid.h"
 #include "esp_vfs_fat.h"
-#include "driver/sdmmc_host.h"
+#ifdef SD_MMC
+  #include "driver/sdmmc_host.h"
+#endif // SD_MMC
+#ifdef SD_SPI
 #include "driver/sdspi_host.h"
+#endif // SD_SPI
 #include "driver/spi_common.h"
 #include "sdmmc_cmd.h"
 #include "sdkconfig.h"
@@ -95,35 +121,72 @@ void app_main(void) {
 	const char signon[]="Initializing emulator...\r\n";
 	for (const char *p=signon; *p!=0; p++) ie15_sendchar(*p);
 
+#if !defined(SD_NONE)
 	//Initialize SD-card, if possible
+	ESP_LOGI(TAG,"Initialize SD-card");
 	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
 		.format_if_mount_failed = false,
 		.max_files = 2,
 		.allocation_unit_size = 16 * 1024
 	};
 	sdmmc_card_t* card;
-
+  #if defined(SD_MMC)
+	ESP_LOGI(TAG,"Create SDMMC_HOST");
 	sdmmc_host_t host = SDMMC_HOST_DEFAULT();
 //	host.max_freq_khz=5000;
 	sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 	// GPIOs 15, 2, 4, 12, 13 should have external 10k pull-ups.
 	// Internal pull-ups are not sufficient. However, enabling internal pull-ups
 	// does make a difference some boards, so we do that here.
-	gpio_set_pull_mode(15, GPIO_PULLUP_ONLY);	// CMD, needed in 4- and 1- line modes
-	gpio_set_pull_mode(2, GPIO_PULLUP_ONLY);	// D0, needed in 4- and 1-line modes
-	gpio_set_pull_mode(4, GPIO_PULLUP_ONLY);	// D1, needed in 4-line mode only
-	gpio_set_pull_mode(12, GPIO_PULLUP_ONLY);	// D2, needed in 4-line mode only
-	gpio_set_pull_mode(13, GPIO_PULLUP_ONLY);	// D3, needed in 4- and 1-line modes
+	gpio_set_pull_mode(SD_MMC_CMD, GPIO_PULLUP_ONLY);	// CMD, needed in 4- and 1- line modes
+	gpio_set_pull_mode(SD_MMC_D0, GPIO_PULLUP_ONLY);	// D0, needed in 4- and 1-line modes
+	gpio_set_pull_mode(SD_MMC_D1, GPIO_PULLUP_ONLY);	// D1, needed in 4-line mode only
+	gpio_set_pull_mode(SD_MMC_D2, GPIO_PULLUP_ONLY);	// D2, needed in 4-line mode only
+	gpio_set_pull_mode(SD_MMC_D3, GPIO_PULLUP_ONLY);	// D3, needed in 4- and 1-line modes
+	ESP_LOGI(TAG,"Initialize VFS via SDMMC\n");
 	ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
+  #elif defined(SD_SPI)
+	ESP_LOGI(TAG,"Create SDSPI_HOST\n");
+	sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+	host.slot = SD_SPI_HOST;
+	spi_bus_config_t bus_cfg = {
+        	.mosi_io_num = SD_SPI_MOSI,
+        	.miso_io_num = SD_SPI_MISO,
+        	.sclk_io_num = SD_SPI_SCLK,
+        	.quadwp_io_num = -1,
+        	.quadhd_io_num = -1,
+        	.max_transfer_sz = 4000,
+	};
+	ESP_LOGI(TAG,"Initialize SPI_BUS\n");
+	// ret = spi_bus_initialize(host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
+	ret = spi_bus_initialize(host.slot, &bus_cfg, SD_SPI_DMA);
+	if (ret != ESP_OK) {
+		ESP_LOGE(TAG,"Failed to initialize bus.");
+		return;
+	}    
+	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+	slot_config.gpio_cs = SD_SPI_CS;
+	slot_config.host_id = host.slot;
+
+	ESP_LOGI(TAG,"Initialize VFS via SDSPI\n");
+	//ret = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
+	ret = esp_vfs_fat_sdspi_mount("/sdcard", &host, &slot_config, &mount_config, &card);
+  #else
+    #error SD_MMC or SD_SPI or SD_NONE must be defined
+#endif // defined(SD_MMC) // defined(SD_SPI)
 	if (ret != ESP_OK) {
 		ESP_LOGE(TAG, "SD-card: Failed to mount filesystem.");
-		const char noflopstr[]="No SD card. Booting from built-in floppy.\r\n";
+		const char noflopstr[]="No SD card. Trying boot from built-in floppy.\r\n";
 		for (const char *p=noflopstr; *p!=0; p++) ie15_sendchar(*p);
 	} else {
 		sdmmc_card_print_info(stdout, card);
 	}
+#else
+	ESP_LOGI(TAG,"No SD-Card defined");
+#endif // defined(SD_NONE)
 
-	//Mount spiffs. This contains a floppy image.
+#if !defined(SPIFFS_NONE)
+	//Mount spiffs. This contains (a) floppy image(s).
 	esp_vfs_spiffs_conf_t conf = {
 		.base_path = "/spiffs",
 		.partition_label = NULL,
@@ -136,7 +199,7 @@ void app_main(void) {
 
 	if (ret != ESP_OK) {
 		if (ret == ESP_FAIL) {
-			ESP_LOGE(TAG, "Failed to mount or format filesystem");
+			ESP_LOGE(TAG, "Failed to mount filesystem");
 		} else if (ret == ESP_ERR_NOT_FOUND) {
 			ESP_LOGE(TAG, "Failed to find SPIFFS partition");
 		} else {
@@ -144,7 +207,10 @@ void app_main(void) {
 		}
 		return;
 	}
-
+#else
+	ESP_LOGI(TAG,"No SPIFFS defined");
+#endif // defined(SPIFFS_NONE)
+	
 	bthid_start();
 
 	nanosleep_init();

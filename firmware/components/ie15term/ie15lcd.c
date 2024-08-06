@@ -19,24 +19,28 @@
 #include "esp_vfs.h"
 #include "esp_vfs_dev.h"
 #include "sdkconfig.h"
+
+#include "esp_log.h"
+#define TAG "ie15lcd"
+
+// load hardware specific definitions, use 'idf.py menuconfig' to set it 
+
+#if CONFIG_ESPPDP_HW_WROVER_KIT
+#include "hw_wrover.h"
+#elif CONFIG_ESPPDP_HW_2432S028
+#include "hw_2432S028.h"
+#elif CONFIG_ESPPDP_HW_FINAL
+#include "hw_final.h"
+#else
+#error ESPPDP Hardware not configured, use 'idf.py menuconfig' to choose
+#endif
+
 /*
 Emulation of a Russian IE15-type terminal on a  ILI9341/ST7789V 320x240 LCD in landscape mode.
 */
 
 //Reference the binary-included character generator ROM contents of an original terminal
 extern const uint8_t chargenrom[] asm("_binary_chargen_bin_start");
-
-#define LCD_HOST	HSPI_HOST
-#define DMA_CHAN	2
-
-#define PIN_NUM_MISO -1
-#define PIN_NUM_MOSI 23
-#define PIN_NUM_CLK	 19
-#define PIN_NUM_CS	 22
-
-#define PIN_NUM_DC	 21
-#define PIN_NUM_RST	 18
-#define PIN_NUM_BCKL 5
 
 // The LCD needs a bunch of command/argument values to be initialized. They are stored in this struct.
 typedef struct {
@@ -53,8 +57,13 @@ typedef enum {
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
 DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
+#if DISPLAY_ROTATE
+	/* Memory Data Access Control, MX=MV=1, MX=ML=MH=0, RGB=0 */
+	{0x36, {(1<<5)|(1<<7)}, 1},
+#else
 	/* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
 	{0x36, {(1<<5)|(1<<6)}, 1},
+#endif // DISPLAY_ROTATE
 	/* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
 	{0x3A, {0x55}, 1},
 	/* Porch Setting */
@@ -81,7 +90,7 @@ DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
 	{0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
 	/* Sleep Out */
 	{0x11, {0}, 0x80},
-#if !CONFIG_ESPPDP_HW_WROVER_KIT
+#if DISPLAY_INVERT
 	{0x21, {0}, 0x80},
 #endif
 	/* Display On */
@@ -118,8 +127,13 @@ DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
 	{0xC5, {0x35, 0x3E}, 2},
 	/* VCOM control 2, VCOMH=VMH-2, VCOML=VML-2 */
 	{0xC7, {0xBE}, 1},
+#if DISPLAY_ROTATE
+	/* Memory access contorl, MX=MY=1, MV=1, ML=0, BGR=1, MH=0 */
+	{0x36, {0xE8}, 1},
+#else
 	/* Memory access contorl, MX=MY=0, MV=1, ML=0, BGR=1, MH=0 */
 	{0x36, {0x28}, 1},
+#endif //DISPLAY_ROTATE
 	/* Pixel format, 16bits/pixel for RGB/MCU interface */
 	{0x3A, {0x55}, 1},
 	/* Frame rate control, f=fosc, 70Hz fps */
@@ -144,6 +158,9 @@ DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
 	{0xB6, {0x0A, 0x82, 0x27, 0x00}, 4},
 	/* Sleep out */
 	{0x11, {0}, 0x80},
+#if DISPLAY_INVERT
+	{0x21, {0}, 0x80},
+#endif	
 	/* Display on */
 	{0x29, {0}, 0x80},
 	{0, {0}, 0xff},
@@ -190,7 +207,7 @@ static void lcd_data(spi_device_handle_t spi, const uint8_t *data, int len) {
 //set the D/C line to the value indicated in the user field.
 static void lcd_spi_pre_transfer_callback(spi_transaction_t *t) {
 	int dc=(int)t->user;
-	gpio_set_level(PIN_NUM_DC, dc);
+	gpio_set_level(DISPLAY_SPI_DC, dc);
 }
 
 static uint32_t lcd_get_id(spi_device_handle_t spi) {
@@ -215,42 +232,45 @@ static void lcd_init(spi_device_handle_t spi) {
 	const lcd_init_cmd_t* lcd_init_cmds;
 
 	//Initialize non-SPI GPIOs
-	gpio_set_direction(PIN_NUM_DC, GPIO_MODE_OUTPUT);
-	gpio_set_direction(PIN_NUM_RST, GPIO_MODE_OUTPUT);
-	gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DISPLAY_SPI_DC, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DISPLAY_BCKL, GPIO_MODE_OUTPUT);
 
+	// reset if reset line is given
+#if DISPLAY_SPI_RST != GPIO_NUM_NC
+	gpio_set_direction(DISPLAY_SPI_RST, GPIO_MODE_OUTPUT);
 	//Reset the display
-	gpio_set_level(PIN_NUM_RST, 0);
-	vTaskDelay(100 / portTICK_RATE_MS);
-	gpio_set_level(PIN_NUM_RST, 1);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	gpio_set_level(DISPLAY_SPI_RST, 0);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+	gpio_set_level(DISPLAY_SPI_RST, 1);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+#endif
 
 	//detect LCD type
-#if CONFIG_ESPPDP_HW_WROVER_KIT
-	uint32_t lcd_id = lcd_get_id(spi);
+#if defined(DISPLAY_ID)
+	uint32_t lcd_id = DISPLAY_ID;//lcd_get_id(spi);
 #else
-	uint32_t lcd_id = 1;//lcd_get_id(spi);
+	uint32_t lcd_id = lcd_get_id(spi);
 #endif
 	int lcd_detected_type = 0;
 	int lcd_type;
 
-	printf("LCD ID: %08X\n", lcd_id);
+	ESP_LOGI(TAG,"LCD ID: %08X\n", (unsigned int)lcd_id);
 	if ( lcd_id == 0 ) {
 		//zero, ili
 		lcd_detected_type = LCD_TYPE_ILI;
-		printf("ILI9341 detected.\n");
+		ESP_LOGI(TAG,"ILI9341 detected.\n");
 	} else {
 		// none-zero, ST
 		lcd_detected_type = LCD_TYPE_ST;
-		printf("ST7789V detected.\n");
+		ESP_LOGI(TAG,"ST7789V detected.\n");
 	}
 
 	lcd_type = lcd_detected_type;
 	if ( lcd_type == LCD_TYPE_ST ) {
-		printf("LCD ST7789V initialization.\n");
+		ESP_LOGI(TAG,"LCD ST7789V initialization.\n");
 		lcd_init_cmds = st_init_cmds;
 	} else {
-		printf("LCD ILI9341 initialization.\n");
+		ESP_LOGI(TAG,"LCD ILI9341 initialization.\n");
 		lcd_init_cmds = ili_init_cmds;
 	}
 
@@ -259,16 +279,14 @@ static void lcd_init(spi_device_handle_t spi) {
 		lcd_cmd(spi, lcd_init_cmds[cmd].cmd);
 		lcd_data(spi, lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes&0x1F);
 		if (lcd_init_cmds[cmd].databytes&0x80) {
-			vTaskDelay(100 / portTICK_RATE_MS);
+			vTaskDelay(100 / portTICK_PERIOD_MS);
 		}
 		cmd++;
 	}
 
-	///Enable backlight
-#if CONFIG_ESPPDP_HW_WROVER_KIT
-	gpio_set_level(PIN_NUM_BCKL, 0);
-#else
-	gpio_set_level(PIN_NUM_BCKL, 1);
+	///Enable backlight if DISPLAY_BCKL is given
+#if DISPLAY_BCKL != GPIO_NUM_NC
+	gpio_set_level(DISPLAY_BCKL, DISPLAY_BCKL_ON );
 #endif
 }
 
@@ -277,8 +295,8 @@ static inline int get_pix(int c, int x, int y) {
 	return (chargenrom[p+y]>>(7-x))&1;
 }
 
-#define CHW 4
-#define CHH 10
+// #define CHW 4
+// #define CHH 10
 
 static const int lcdrgb(int r, int g, int b) {
 	r=r>>3;
@@ -289,23 +307,23 @@ static const int lcdrgb(int r, int g, int b) {
 }
 
 static void draw_char(spi_device_handle_t spi,int c, int cx, int cy) {
-	int x=cx*CHW;
-	int y=cy*CHH;
+	int x=cx*DISPLAY_CHW;
+	int y=cy*DISPLAY_CHH;
 	int cols[3];
 	cols[0]=lcdrgb(0, 0, 0);
 	cols[1]=lcdrgb(13, 210, 13);
 	cols[2]=lcdrgb(16, 255, 16);
 
-	uint16_t chardata[CHW*CHH];
-	for (int ly=0; ly<CHH; ly++) {
-		for (int lx=0; lx<CHW; lx++) {
+	uint16_t chardata[DISPLAY_CHW*DISPLAY_CHH];
+	for (int ly=0; ly<DISPLAY_CHH; ly++) {
+		for (int lx=0; lx<DISPLAY_CHW; lx++) {
 			if (ly<8) {
 				int p;
 				p=get_pix(c, lx*2, ly);
 				p+=get_pix(c, lx*2+1, ly);
-				chardata[ly*CHW+lx]=cols[p];
+				chardata[ly*DISPLAY_CHW+lx]=cols[p];
 			} else {
-				chardata[ly*CHW+lx]=0;
+				chardata[ly*DISPLAY_CHW+lx]=0;
 			}
 		}
 	}
@@ -328,16 +346,16 @@ static void draw_char(spi_device_handle_t spi,int c, int cx, int cy) {
 	trans[0].tx_data[0]=0x2A;			//Column Address Set
 	trans[1].tx_data[0]=x>>8;				//Start Col High
 	trans[1].tx_data[1]=x&0xff;				//Start Col Low
-	trans[1].tx_data[2]=(x+CHW-1)>>8;		//End Col High
-	trans[1].tx_data[3]=(x+CHW-1)&0xff;		//End Col Low
+	trans[1].tx_data[2]=(x+DISPLAY_CHW-1)>>8;		//End Col High
+	trans[1].tx_data[3]=(x+DISPLAY_CHW-1)&0xff;		//End Col Low
 	trans[2].tx_data[0]=0x2B;			//Page address set
 	trans[3].tx_data[0]=y>>8;		//Start page high
 	trans[3].tx_data[1]=y&0xff;		//start page low
-	trans[3].tx_data[2]=(y+CHH-1)>>8;	 //end page high
-	trans[3].tx_data[3]=(y+CHH-1)&0xff;	 //end page low
+	trans[3].tx_data[2]=(y+DISPLAY_CHH-1)>>8;	 //end page high
+	trans[3].tx_data[3]=(y+DISPLAY_CHH-1)&0xff;	 //end page low
 	trans[4].tx_data[0]=0x2C;			//memory write
 	trans[5].tx_buffer=chardata;		//finally send the line data
-	trans[5].length=(CHW*CHH)*2*8;			 //Data length, in bits
+	trans[5].length=(DISPLAY_CHW*DISPLAY_CHH)*2*8;			 //Data length, in bits
 	trans[5].flags=0; //undo SPI_TRANS_USE_TXDATA flag
 	
 	//Send all transactions.
@@ -369,31 +387,31 @@ static void ie15_task(void *ptr) {
 	esp_err_t ret;
 	spi_device_handle_t spi;
 	spi_bus_config_t buscfg={
-		.miso_io_num=PIN_NUM_MISO,
-		.mosi_io_num=PIN_NUM_MOSI,
-		.sclk_io_num=PIN_NUM_CLK,
+		.miso_io_num=DISPLAY_SPI_MISO,
+		.mosi_io_num=DISPLAY_SPI_MOSI,
+		.sclk_io_num=DISPLAY_SPI_SCLK,
 		.quadwp_io_num=-1,
 		.quadhd_io_num=-1,
 		.max_transfer_sz=4094
 	};
 	spi_device_interface_config_t devcfg={
-		.clock_speed_hz=10*1000*1000,			//Clock out at 20 MHz
+	  	.clock_speed_hz=DISPLAY_SPI_HZ,			//Clock out at 20 MHz
 		.mode=0,								//SPI mode 0
-		.spics_io_num=PIN_NUM_CS,				//CS pin
+		.spics_io_num=DISPLAY_SPI_CS,				//CS pin
 		.queue_size=7,							//We want to be able to queue 7 transactions at a time
 		.pre_cb=lcd_spi_pre_transfer_callback,	//Specify pre-transfer callback to handle D/C line
 	};
 	//Initialize the SPI bus
-	ret=spi_bus_initialize(LCD_HOST, &buscfg, DMA_CHAN);
+	ret=spi_bus_initialize(DISPLAY_SPI_HOST, &buscfg, DISPLAY_SPI_DMA);
 	ESP_ERROR_CHECK(ret);
 	//Attach the LCD to the SPI bus
-	ret=spi_bus_add_device(LCD_HOST, &devcfg, &spi);
+	ret=spi_bus_add_device(DISPLAY_SPI_HOST, &devcfg, &spi);
 	ESP_ERROR_CHECK(ret);
 	//Initialize the LCD
 	lcd_init(spi);
 
-	for (int y=0; y<240/CHH; y++) {
-		for (int x=0; x<320/CHW; x++) {
+	for (int y=0; y<240/DISPLAY_CHH; y++) {
+		for (int x=0; x<320/DISPLAY_CHW; x++) {
 			draw_char(spi, 0, x, y);
 		}
 	}

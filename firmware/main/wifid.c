@@ -144,9 +144,9 @@ void wifid_parse_packet(uint8_t *buffer, int len) {
 	} else if (wcmd->cmd == CMD_QUIT) {
 		//Ignore, we aren't the one needing to quit here.
 	} else {
-		printf("WiFiD: Got unknown commmand %d\n", wcmd->cmd);
+		printf("WiFiD: Got unknown commmand %ld\n", wcmd->cmd);
 		char buff[32];
-		sprintf(buff, "Unknown cmd %d", wcmd->cmd);
+		sprintf(buff, "Unknown cmd %ld", wcmd->cmd);
 		send_error_msg(buff);
 	}
 }

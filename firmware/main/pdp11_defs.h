@@ -77,7 +77,7 @@
    05-Apr-01    RMS     Added TS11/TSV05 support
    10-Feb-01    RMS     Added DECtape support
 */
-
+#pragma GCC diagnostic ignored  "-Wformat"
 #ifndef PDP11_DEFS_H
 #define PDP11_DEFS_H   0
 

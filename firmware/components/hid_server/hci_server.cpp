@@ -38,6 +38,10 @@ using namespace std;
 #define PRINTF(...)
 #endif
 
+#include "esp_log.h"
+#define TAG "hci_server"
+
+
 #define HCI_GRP_LINK_CONT_CMDS             (0x01 << 10) // 0x0400
 #define HCI_GRP_LINK_POLICY_CMDS           (0x02 << 10) // 0x0800
 #define HCI_GRP_HOST_CONT_BASEBAND_CMDS    (0x03 << 10) // 0x0C00
@@ -509,7 +513,7 @@ public:
     // this will happen before hid knows about it
     void hci_connected(const connection_info* ci)
     {
-        PRINTF("%s connected on handle %d\n",batostr(ci->bdaddr),ci->handle);
+        ESP_LOGI(TAG,"%s connected on handle %d\n",batostr(ci->bdaddr),ci->handle);
         _handle = ci->handle;
     }
 
@@ -575,7 +579,7 @@ public:
 
     void control(const l2cap_cmd* c)
     {
-        PRINTF("acl recv:%d %s %d:%d:%d:%d len:%d\n",c->id,L2CAP_ComandCodeStr(c->cmd),
+        ESP_LOGI(TAG,"acl recv:%d %s %d:%d:%d:%d len:%d\n",c->id,L2CAP_ComandCodeStr(c->cmd),
                c->params[0],c->params[1],c->params[2],c->params[3],c->cmdLength);
 
         _txid++;    // TODO. advance _txid on recev?
@@ -596,7 +600,7 @@ public:
                     if (status != 1) {
                         if (s)
                             s->set_state(L2CAP_CLOSED);
-                        PRINTF("l2cap connection FAILED: %d\n",status);
+                        ESP_LOGE(TAG,"l2cap connection FAILED: %d\n",status);
                     }
                 }
             }
@@ -663,7 +667,7 @@ public:
                 break;
 
             default:
-                PRINTF("%02X l2cap weird %d %s\n",c->cmd,c->cmdLength,L2CAP_ComandCodeStr(c->cmd));
+                ESP_LOGI(TAG,"%02X l2cap weird %d %s\n",c->cmd,c->cmdLength,L2CAP_ComandCodeStr(c->cmd));
         }
     }
 
@@ -685,7 +689,7 @@ public:
 
     int l2cap(uint8_t cmd, uint8_t id, u16* params, int count)
     {
-        PRINTF("acl send:%d %s\n",id,L2CAP_ComandCodeStr(cmd));
+        ESP_LOGI(TAG,"acl send:%d %s\n",id,L2CAP_ComandCodeStr(cmd));
         l2cap_cmd b;
         b.cmd = cmd;
         b.id = id;
@@ -854,7 +858,7 @@ public:
     {
         _hci = hci_open();
         if (!_hci)
-            PRINTF("hci_open failed\n");
+            ESP_LOGI(TAG,"hci_open failed\n");
         else {
             hci_set_packet_handler(_hci,packet_,this);
             hci_set_ready_to_send_handler(_hci,ready_to_send_,this);
@@ -882,11 +886,11 @@ public:
     static void trace(int dir, const uint8_t* data, int len)
     {
         static const char *tagnames[5] = { "???", "CMD", "ACL", "ISO", "EVT" };
-        fprintf(stdout,"%c %s ",dir ? '>' : '<',tagnames[*data++]);
+        ESP_LOGI(TAG,"%c %s ",dir ? '>' : '<',tagnames[*data++]);
         len--;
         for (int i = 0; i < len; i++)
-            fprintf(stdout,"%02X",data[i]);
-        fprintf(stdout,"\n");
+            ESP_LOGI(TAG,"%02X",data[i]);
+        ESP_LOGI(TAG,"\n");
     }
 
     int update()
@@ -907,7 +911,7 @@ public:
                 case 0x2: acl(&buf[0],(int)buf.size()); break;
                 case 0x4: hci(buf[1],&buf[3],buf[2]); break;
                 default:
-                    PRINTF("bad hci packet\n");
+                    ESP_LOGE(TAG,"bad hci packet\n");
             }
         }
         return 0;
@@ -1024,7 +1028,7 @@ private:
         auto* d = get_device(&ri->bdaddr);
         if (d) {
             d->_name = ri->name;
-            PRINTF("remote_name_response %s %s\n",batostr(ri->bdaddr),ri->name);
+            ESP_LOGI(TAG,"remote_name_response %s %s\n",batostr(ri->bdaddr),ri->name);
         }
         return d;
     }
@@ -1134,7 +1138,7 @@ private:
                 //uint16_t buf[1] = {(uint16_t)d->_handle};
                 //cmd(HCI_AUTHENTICATION_REQUESTED,buf,sizeof(buf));  // ask for auth
             } else {
-                PRINTF("hci connection failed: %s\n",hci_status_str(c->status));
+                ESP_LOGE(TAG,"hci connection failed: %s\n",hci_status_str(c->status));
                 d->_handle = -1;
             }
         }
@@ -1169,7 +1173,7 @@ private:
 
     void hci(uint8_t evt, const uint8_t* data, uint8_t len)
     {
-        PRINTF("%s %d bytes\n",hci_evt(evt),len);
+        ESP_LOGI(TAG,"%s %d bytes\n",hci_evt(evt),len);
         switch (evt) {
             case HCI_INQUIRY_COMP_EVT:
                 _state &= ~MASK_INQUIRY;
@@ -1263,7 +1267,7 @@ private:
             {
                 int c = data[1] | (data[2] << 8);
                 int status = data[3];
-                PRINTF(" -> %s %04X %s\n",hci_cmd(c),c,hci_status_str(status));
+                ESP_LOGI(TAG," -> %s %04X %s\n",hci_cmd(c),c,hci_status_str(status));
                 switch (c) {
                     //  Init phase 0
                     case HCI_RESET:
@@ -1336,7 +1340,7 @@ private:
             case HCI_COMMAND_STATUS_EVT:    // after starting inquiry/connect etc
             {
                 int cmd = data[2] + (data[3] << 8);
-                PRINTF(" -> %s %04X %s\n",hci_cmd(cmd),cmd,hci_status_str(data[0]));
+                ESP_LOGI(TAG," -> %s %04X %s\n",hci_cmd(cmd),cmd,hci_status_str(data[0]));
             }
                 break;
             case HCI_QOS_SETUP_COMP_EVT:
@@ -1353,7 +1357,7 @@ private:
                 write_link_key((const bdaddr_t*)data,data+6);
                 break;
             default:
-                PRINTF("unhandled hci case\n");
+                ESP_LOGE(TAG,"unhandled hci case\n");
         }
     }
 
@@ -1381,7 +1385,7 @@ private:
         // interesting bug on libusb/simulator where ACL open packet arrives before hci connection complete
         // hci arrives on libusb_fill_interrupt_transfer, acl on libusb_fill_bulk_transfer but acl gets ahead
 
-        PRINTF("ACL PACKET DROPPED! handle %d, %d bytes\n",h,len);
+        ESP_LOGE(TAG,"ACL PACKET DROPPED! handle %d, %d bytes\n",h,len);
         _dongle_bug.resize(len);
         memcpy(&_dongle_bug[0],data,len);
     }

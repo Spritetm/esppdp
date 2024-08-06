@@ -7,7 +7,7 @@ BT device afterwards will be detected automatically. Unfortunately there's no ea
 the pairing to use a different keyboard without erasing the flash of the ESP32 (idf.py erase-flash).
 
 This firmware works on either the final hardware (as detailed in the ../pcb directory) as well
-as a standard ESP32-Wrover-Kit development board + LCD. You can configure which board to run on
+as a standard ESP32-Wrover-Kit development board + LCD and a modified Sunton 2432S028 board. You can configure which board to run on
 in menuconfig. (If your LCDs backlight doesn't turn on, you selected the wrong one.)
 
 The firmware embeds a floppy disk containing RTX-11 as well as Tetris, and will start this up
@@ -21,4 +21,6 @@ from uploading the Tetris floppy every time.
 
 This firmware is developed on the current (11 jan 2021) master branch of ESP-IDF, but will likely
 compile on ESP-IDF 4.2 and possibly other versions.
+
+As of April 2024 it is patched for latest ESP-IDF 5.2.1 and compiles with that. 
 
